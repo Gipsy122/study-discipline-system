@@ -2,69 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS | Command Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Discipline OS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div id="boot-screen">
-        <button class="btn-boot" onclick="systemBoot()">INITIALIZE SYSTEM</button>
+        <button onclick="systemBoot()" style="border-radius: 50px; padding: 20px 40px;">INITIALIZE OS</button>
     </div>
 
-    <div id="app-content" style="display:none;">
-        <div class="card main-stats">
-            <div id="pool" class="pool-display">---</div>
-            <p class="label-dim">REMAINING BREAK POOL</p>
-            <div class="stat-row">
-                <div><small>BUFFER</small><br><span id="buffer">--</span></div>
-                <div><small>SLEEP GOAL</small><br><span id="sleep-val">--</span></div>
+    <div id="app-content" style="display:none; width: 100%; max-width: 380px;">
+        
+        <div class="glass-card">
+            <div id="pool" class="pool-val">---</div>
+            <div class="label">Break Pool Remaining</div>
+            
+            <div class="sub-stats">
+                <div>
+                    <div id="buffer" style="font-weight: bold;">--</div>
+                    <div class="label" style="font-size: 0.5rem;">Buffer</div>
+                </div>
+                <div>
+                    <div id="sleep-val" style="font-weight: bold;">--</div>
+                    <div class="label" style="font-size: 0.5rem;">Goal</div>
+                </div>
             </div>
         </div>
 
-        <div id="timer-display-box" class="timer-card">
-            <div id="timer-name" class="label-dim">SYSTEM IDLE</div>
+        <div class="timer-wrap">
+            <div id="timer-name" class="label">System Idle</div>
             <div id="timer-clock">00:00</div>
         </div>
 
         <div id="admin-panel" class="admin-grid">
-            <h2 class="admin-title">COMMAND CENTER</h2>
-            
-            <div class="control-module">
-                <label>BATH (30m)</label>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="startTimer('Bath', 30, false)">START</button>
-                    <button class="btn-stop" onclick="stopTimer()">STOP</button>
-                    <button class="btn-input" onclick="manualInput('Bath', 30, false)">INPUT</button>
-                </div>
-            </div>
-
-            <div class="control-module">
-                <label>FOOD (45m)</label>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="startTimer('Food', 45, false)">START</button>
-                    <button class="btn-stop" onclick="stopTimer()">STOP</button>
-                    <button class="btn-input" onclick="manualInput('Food', 45, false)">INPUT</button>
-                </div>
-            </div>
-
-            <div class="control-module">
-                <label>HAGA (30m)</label>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="startTimer('Haga', 30, false)">START</button>
-                    <button class="btn-stop" onclick="stopTimer()">STOP</button>
-                    <button class="btn-input" onclick="manualInput('Haga', 30, false)">INPUT</button>
-                </div>
-            </div>
-
-            <div class="control-module strict">
-                <label>SLEEP (7h Strict)</label>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="startTimer('Sleep', 420, true)">START</button>
-                    <button class="btn-stop" onclick="stopTimer()">STOP</button>
-                    <button class="btn-input" onclick="manualInput('Sleep', 420, true)">INPUT</button>
-                </div>
-            </div>
+            <button onclick="startTimer('Bath', 30, false)">BATH</button>
+            <button onclick="startTimer('Food', 45, false)">FOOD</button>
+            <button onclick="startTimer('Haga', 30, false)">HAGA</button>
+            <button onclick="startTimer('Sleep', 420, true)" style="color:var(--accent)">SLEEP</button>
+            <button onclick="stopTimer()" class="btn-stop">STOP ACTIVITY</button>
+            <button onclick="manualInput('Extra', 0, false)" style="grid-column: span 2; font-size: 0.6rem; opacity: 0.5;">Manual Override</button>
         </div>
+
     </div>
 
     <script type="module" src="script.js"></script>
