@@ -4,26 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Discipline System</title>
+    <title>Discipline System v6</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="user-view"> <header>
-        <div class="total-break-container">
-            <h2>Total Break Time Remaining</h2>
-            <div id="main-break-timer">210:00</div>
+<body class="user-view"> <div class="top-bar">
+        <div class="main-timer-block">
+            <span class="label">Total Daily Break Remaining</span>
+            <div id="bank-timer">210:00</div>
         </div>
-    </header>
+    </div>
 
-    <main id="dashboard">
+    <main class="dashboard-grid" id="timer-grid">
         </main>
 
-    <section id="coupon-section">
-        <h3>Available Rewards</h3>
-        <div id="coupon-list"></div>
-        <div class="admin-only">
-            <input type="text" id="coupon-code" placeholder="Code (e.g. BONUS10)">
-            <input type="number" id="coupon-value" placeholder="Mins">
-            <button id="issue-coupon">Issue Coupon</button>
+    <section class="coupon-section">
+        <div class="block">
+            <h3>Active Coupons</h3>
+            <div id="coupon-display-area"></div>
+            <div class="admin-controls">
+                <hr>
+                <h4>Issue New Coupon</h4>
+                <div class="input-group">
+                    <input type="text" id="cpn-name" placeholder="Name">
+                    <input type="number" id="cpn-val" placeholder="Mins">
+                    <button id="btn-issue">Issue</button>
+                </div>
+            </div>
         </div>
     </section>
 
