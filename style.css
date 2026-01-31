@@ -1,88 +1,96 @@
 :root {
-    --bg: #080a0c;
-    --card: #15191e;
-    --accent: #a9d3ff; /* Android 15 Blue */
+    --bg: #0b0d0f;
+    --card: #181c20;
+    --accent: #a8c7ff;
     --danger: #ffb4ab;
     --text: #e2e2e6;
-    --text-dim: #909094;
+    --dim: #8e9199;
 }
 
+* { box-sizing: border-box; }
 body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     margin: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
 }
 
 .app-container {
     width: 100%;
-    max-width: 1200px;
-    padding: 24px;
+    max-width: 1100px;
 }
 
-/* HEADER STATS */
-.global-stats { margin-bottom: 30px; }
-.stat-block {
+.block, .tile {
     background: var(--card);
-    padding: 30px;
     border-radius: 28px;
-    text-align: center;
-    border: 1px solid #2d3135;
+    padding: 24px;
+    border: 1px solid #333;
 }
-.main-pool h1 { font-size: 3.5rem; margin: 10px 0; font-variant-numeric: tabular-nums; }
 
-/* GRID SYSTEM */
+.label {
+    color: var(--dim);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* MAIN MONITOR */
+.main-pool-block { text-align: center; margin-bottom: 24px; }
+.pool-display h1 { 
+    font-size: 4.5rem; 
+    margin: 10px 0; 
+    font-variant-numeric: tabular-nums; 
+}
+
+/* GRID */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
-.tile {
-    background: var(--card);
-    border-radius: 28px;
-    padding: 24px;
-    border: 1px solid #2d3135;
-    transition: transform 0.2s, border-color 0.2s;
-}
-
-.tile:hover { border-color: var(--accent); }
-
+.tile { transition: border-color 0.3s; }
 .tile-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.label { color: var(--text-dim); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
-.limit-tag { background: #2d3135; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; }
+.threshold { background: #2d3135; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; }
 
 /* CIRCULAR TIMERS */
-.timer-circle {
+.timer-container {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 160px;
+    height: 160px;
     margin: 0 auto 20px;
 }
 svg { transform: rotate(-90deg); }
 circle { fill: none; stroke-width: 8; stroke-linecap: round; }
-circle.bg { stroke: #2d3135; }
-circle.progress {
+.ring-bg { stroke: #2d3135; }
+.ring-progress {
     stroke: var(--accent);
-    stroke-dasharray: 283;
+    stroke-dasharray: 283; /* 2 * PI * 45 */
     stroke-dashoffset: 283;
-    transition: stroke-dashoffset 0.5s ease;
+    transition: stroke-dashoffset 0.4s ease;
 }
-.time-text {
+.timer-text {
     position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 1.5rem; font-weight: bold;
+    font-size: 1.8rem; font-weight: bold;
 }
 
-/* ADMIN CONTROLS */
-.admin-controls { display: none; flex-direction: column; gap: 8px; }
-body.admin-mode .admin-controls { display: flex; }
+/* VIOLATION STATE */
+.tile.violation { border-color: var(--danger); }
+.tile.violation .ring-progress { stroke: var(--danger); }
+
+/* ADMIN UI */
+.admin-controls { display: none; }
+body.admin-mode .admin-controls { display: flex; flex-direction: column; gap: 8px; }
 
 button {
-    background: var(--accent); color: #000;
-    border: none; padding: 10px; border-radius: 12px;
+    background: var(--accent); color: #003062;
+    border: none; padding: 12px; border-radius: 12px;
     font-weight: bold; cursor: pointer;
 }
 input {
@@ -90,12 +98,10 @@ input {
     padding: 10px; border-radius: 12px; text-align: center;
 }
 
-/* RESPONSIVE */
-@media (max-width: 600px) {
-    .app-container { padding: 15px; }
-    .main-pool h1 { font-size: 2.5rem; }
-}
+.creator-row { flex-direction: row !important; }
 
-/* VIOLATION STATE */
-.tile.violation { border-color: var(--danger); }
-.tile.violation .progress { stroke: var(--danger); }
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 600px) {
+    .pool-display h1 { font-size: 3rem; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+}
