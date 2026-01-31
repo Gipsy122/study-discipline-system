@@ -13,82 +13,98 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const statsRef = ref(db, 'discipline/stats');
-const activeRef = ref(db, 'discipline/active');
+const stateRef = ref(db, 'discipline/v5_state');
+
 const isAdmin = window.location.search.includes('admin=true');
+if(isAdmin) document.body.classList.add('admin-mode');
 
-let runningTimers = {};
+// --- DATABASE SYNC ---
+onValue(stateRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
 
-// --- REALTIME LISTENER ---
-onValue(statsRef, (snap) => {
-    const d = snap.val() || { pool: 210, buffer: 20 };
-    document.getElementById('pool-display').innerText = formatHMS(d.pool * 60);
-    document.getElementById('buffer-display').innerText = formatHMS(d.buffer * 60);
+    // Update Main Pool
+    const poolSecs = data.mainPoolSecs || 12600;
+    document.getElementById('main-pool-display').innerText = formatTime(poolSecs);
+
+    // Update Category Timers
+    ['bath', 'food', 'sleep'].forEach(cat => {
+        const timer = data.timers[cat];
+        const display = document.getElementById(`time-${cat}`);
+        const ring = document.getElementById(`ring-${cat}`);
+        const tile = document.getElementById(`tile-${cat}`);
+
+        let currentSecs = timer.elapsed;
+        if(timer.running) {
+            const now = Math.floor(Date.now() / 1000);
+            currentSecs += (now - timer.lastStarted);
+        }
+
+        display.innerText = formatTime(currentSecs);
+        
+        // Progress Ring (283 is full circle)
+        const limitSecs = timer.limit * 60;
+        const offset = Math.max(0, 283 - (currentSecs / limitSecs) * 283);
+        ring.style.strokeDashoffset = offset;
+
+        // Violation Logic
+        if (currentSecs > limitSecs) {
+            tile.classList.add('violation');
+            if(isAdmin && timer.running) processDrain(1); // Drain 1s per tick
+        } else {
+            tile.classList.remove('violation');
+        }
+    });
 });
 
-// --- TIMER LOGIC ---
-window.toggleTimer = (id, limit) => {
-    if (runningTimers[id]) {
-        clearInterval(runningTimers[id]);
-        delete runningTimers[id];
-        return;
-    }
-    
-    let elapsedSecs = 0;
-    runningTimers[id] = setInterval(() => {
-        elapsedSecs++;
-        const elapsedMins = elapsedSecs / 60;
-        
-        // Update UI
-        updateUI(id, elapsedSecs, limit);
+// --- ACTIONS ---
+window.toggleTimer = (cat, limitMins) => {
+    onValue(stateRef, (s) => {
+        const data = s.val();
+        const t = data.timers[cat];
+        const now = Math.floor(Date.now() / 1000);
 
-        // Auto Deduction
-        if (elapsedMins > limit && isAdmin) {
-            updatePool(-1/60); // 1 sec off pool
+        if(t.running) {
+            t.elapsed += (now - t.lastStarted);
+            t.running = false;
+        } else {
+            t.lastStarted = now;
+            t.running = true;
         }
-    }, 1000);
+        update(ref(db, 'discipline/v5_state/timers/' + cat), t);
+    }, {onlyOnce: true});
 };
 
-window.forwardTime = (id, limit) => {
-    const val = parseInt(document.getElementById(`adj-${id}`).value);
-    if (!val) return;
-    
-    if (val > limit) {
-        updatePool(-(val - limit));
-    }
-    alert(`${id} forward by ${val}m`);
+window.forwardTime = (cat, limitMins, addMins) => {
+    const addSecs = parseInt(addMins) * 60;
+    onValue(stateRef, (s) => {
+        const t = s.val().timers[cat];
+        t.elapsed += addSecs;
+        update(ref(db, 'discipline/v5_state/timers/' + cat), t);
+    }, {onlyOnce: true});
 };
 
-function updateUI(id, currentSecs, limit) {
-    const el = document.getElementById(`time-${id}`);
-    const ring = document.getElementById(`ring-${id}`);
-    const block = document.getElementById(`block-${id}`);
-    
-    el.innerText = formatHMS(currentSecs);
-    
-    // Ring logic
-    const prog = Math.min((currentSecs / (limit * 60)) * 283, 283);
-    ring.style.strokeDashoffset = 283 - prog;
-
-    if (currentSecs > (limit * 60)) {
-        block.classList.add('violation');
-    }
+function processDrain(sec) {
+    onValue(stateRef, (s) => {
+        const current = s.val().mainPoolSecs;
+        update(ref(db, 'discipline/v5_state'), { mainPoolSecs: current - sec });
+    }, {onlyOnce: true});
 }
 
-function updatePool(amt) {
-    onValue(statsRef, (s) => {
-        const d = s.val();
-        update(statsRef, { pool: d.pool + amt });
-    }, { onlyOnce: true });
-}
-
-function formatHMS(seconds) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
+function formatTime(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
     return `${h > 0 ? h + ':' : ''}${m < 10 && h > 0 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-if (!isAdmin) {
-    document.querySelectorAll('.admin-ui').forEach(e => e.style.display = 'none');
-}
+window.resetSystem = () => {
+    set(stateRef, {
+        mainPoolSecs: 12600,
+        timers: {
+            bath: { elapsed: 0, running: false, limit: 30 },
+            food: { elapsed: 0, running: false, limit: 15 },
+            sleep: { elapsed: 0, running: false, limit: 420 }
+        }
+    });
+};
