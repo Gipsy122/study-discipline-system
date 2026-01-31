@@ -103,4 +103,21 @@ button {
     margin: 10px 0; 
 }
 
+
+/* Add this to the bottom of your style.css */
+@keyframes pulse-red {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); text-shadow: 0 0 10px rgba(255, 62, 62, 0.5); }
+    100% { transform: scale(1); }
+}
+
+#timer-clock {
+    transition: color 0.3s ease;
+}
+
+/* This triggers when the pool is draining */
+.violation-mode #timer-clock {
+    animation: pulse-red 1s infinite;
+}
+
 .footer-note { font-size: 0.65rem; color: #444; margin-top: 40px; }
