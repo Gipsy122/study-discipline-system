@@ -3,88 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS v4.0</title>
+    <title>Discipline OS | Admin</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="app-container">
+        <header class="glass-header">
+            <div class="pool-display">
+                <span class="label">TOTAL BREAK POOL</span>
+                <div class="main-timer" id="main-pool">210:00</div>
+            </div>
+            <div class="buffer-display">
+                <span class="label">BUFFER</span>
+                <div id="buffer-val">20:00</div>
+            </div>
+        </header>
 
-    <div class="card">
-        <div class="label">Total Break Pool</div>
-        <div class="pool-text" id="pool">---</div>
-        <div class="stat-grid">
-            <div><div class="label">Buffer</div><div id="buffer" class="sub-val">--</div></div>
-            <div><div class="label">Sleep</div><div id="sleep-val" class="sub-val">--</div></div>
-        </div>
+        <main class="dashboard-grid">
+            <section class="control-block" id="block-bath">
+                <h3>BATH</h3>
+                <div class="timer-circle" data-limit="30">
+                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
+                    <span class="time-readout">30:00</span>
+                </div>
+                <div class="admin-controls">
+                    <button class="btn-toggle" onclick="toggleTimer('bath', 30)">START</button>
+                    <input type="number" placeholder="+ min" onchange="manualAdjust('bath', this.value, 30)">
+                </div>
+            </section>
+
+            <section class="control-block" id="block-food">
+                <h3>FOOD</h3>
+                <div class="timer-circle" data-limit="15">
+                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
+                    <span class="time-readout">15:00</span>
+                </div>
+                <div class="admin-controls">
+                    <button class="btn-toggle" onclick="toggleTimer('food', 15)">START</button>
+                    <input type="number" placeholder="+ min" onchange="manualAdjust('food', this.value, 15)">
+                </div>
+            </section>
+
+            <section class="control-block" id="block-washroom">
+                <h3>WASHROOM</h3>
+                <div class="timer-circle" data-limit="15">
+                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
+                    <span class="time-readout">15:00</span>
+                </div>
+                <div class="admin-controls">
+                    <button class="btn-toggle" onclick="toggleTimer('washroom', 15)">START</button>
+                    <input type="number" placeholder="+ min" onchange="manualAdjust('washroom', this.value, 15)">
+                </div>
+            </section>
+
+            <section class="control-block" id="block-sleep">
+                <h3>SLEEP</h3>
+                <div class="timer-circle" data-limit="420">
+                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
+                    <span class="time-readout">7h</span>
+                </div>
+                <div class="admin-controls">
+                    <button class="btn-toggle" onclick="toggleTimer('sleep', 420)">START</button>
+                </div>
+            </section>
+        </main>
+
+        <section class="coupon-area card">
+            <h3>COUPON MANAGEMENT</h3>
+            <div class="admin-controls" id="coupon-creator">
+                <input type="text" id="cp-name" placeholder="Coupon Name">
+                <input type="number" id="cp-val" placeholder="Value (min)">
+                <button onclick="issueCoupon()">ISSUE COUPON</button>
+            </div>
+            <div id="coupon-display-area" class="coupon-grid"></div>
+        </section>
     </div>
-
-    <div id="active-timer-box">
-        <div id="timer-name" class="label">ACTIVITY ACTIVE</div>
-        <div id="timer-clock">0:00</div>
-        <button id="stop-btn" class="admin-only">STOP & AUDIT</button>
-    </div>
-
-    <div class="label">Available Coupons</div>
-    <div id="coupon-list"></div>
-
-    <div id="admin-panel" class="admin-section">
-        <button id="boot-btn" class="btn-boot">🔄 RESET SYSTEM DATA</button>
-        
-        <div class="btn-row">
-            <button class="btn-start" data-task="Bath" data-limit="30" data-strict="false">Start Bath</button>
-            <button class="btn-input" data-task="Bath" data-limit="30" data-strict="false">Input Bath</button>
-        </div>
-        <div class="btn-row">
-            <button class="btn-start" data-task="Food" data-limit="45" data-strict="false">Start Food</button>
-            <button class="btn-input" data-task="Food" data-limit="45" data-strict="false">Input Food</button>
-        </div>
-        <div class="btn-row">
-            <button class="btn-start" data-task="Haga" data-limit="30" data-strict="false">Start Haga</button>
-            <button class="btn-input" data-task="Haga" data-limit="30" data-strict="false">Input Haga</button>
-        </div>
-        <div class="btn-row">
-            <button class="btn-start btn-strict-outline" data-task="Sleep" data-limit="420" data-strict="true">Start Sleep</button>
-            <button class="btn-input btn-strict" data-task="Sleep" data-limit="420" data-strict="true">Input Sleep</button>
-        </div>
-
-        <h3 class="gold-text">Grant Reward</h3>
-        <button class="btn-reward" id="grant-sleep">Grant Sleep Coupon</button>
-        <button class="btn-reward" id="grant-break">Grant Break Coupon</button>
-    </div>
-
-    <div class="footer-note">
-        ESTIMATED STUDY TIME: 12 HRS 55 MINS<br>
-        UNAUTHORIZED VIOLATION = COMMAND DEDUCTION<br>
-        RUDE BEHAVIOR WILL NOT BE TOLERATED
-    </div>
-<div class="dashboard">
-    <div class="card pool-container">
-        <span class="label">BREAK POOL REMAINING</span>
-        <div class="progress-ring" style="--percent: 100">
-            <span class="pool-val" id="pool-val">210</span>
-        </div>
-        <div style="display:flex; gap: 40px;">
-            <div><small>BUFFER</small><br><b id="buffer-val">20</b>m</div>
-            <div><small>SLEEP</small><br><b id="sleep-val">7h</b></div>
-        </div>
-    </div>
-
-    <div class="card" id="live-timer-card">
-        <span class="label" id="current-task">TASK</span>
-        <div id="timer-display" style="font-size: 4rem; font-weight: 900; margin: 10px 0;">0:00</div>
-        <div id="warning-msg" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--accent);">STABILITY: NORMAL</div>
-        <button class="btn-stop" onclick="stopDiscipline()" style="margin-top: 15px; display: block;">TERMINATE ACTIVITY</button>
-    </div>
-</div>
-
-<div class="admin-grid" id="admin-controls">
-    <button onclick="startDiscipline('Bath', 30)">Start Bath (30m)</button>
-    <button onclick="startDiscipline('Food', 45)">Start Food (45m)</button>
-    <button onclick="startDiscipline('Haga', 30)">Start Haga (30m)</button>
-    <button onclick="startDiscipline('Sleep', 420)">Start Sleep (7h)</button>
-    <button onclick="quickPenalty(2)" style="color: var(--danger)">Wrong Answer (-2m)</button>
-</div>
-    <h3 class="gold-text">Strict Violations</h3>
-<button class="btn-strict" onclick="deductWrongAnswer()">Wrong Answer (-2m)</button>
 
     <script type="module" src="script.js"></script>
 </body>
