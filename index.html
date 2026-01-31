@@ -1,34 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Discipline System</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Discipline System</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body class="user-view">
-    <header>
-        <div class="main-timer-container">
-            <small>Total Daily Break Remaining</small>
-            <h1 id="total-break-timer">210:00</h1>
-        </div>
-    </header>
+  <header>
+    <h1>Study Discipline System</h1>
+    <div id="total-break">
+      <span>Total Break Left</span>
+      <strong id="totalTime">210</strong> min
+    </div>
+  </header>
 
-    <main id="dashboard" class="grid-container">
-        </main>
+  <main id="timerGrid"></main>
 
-    <section class="coupon-section">
-        <h3>Rewards & Coupons</h3>
-        <div id="coupon-display" class="coupon-grid"></div>
-        <div class="admin-only">
-            <div class="admin-controls">
-                <input type="text" id="coupon-name" placeholder="Coupon Name (e.g. Extra Sleep)">
-                <input type="number" id="coupon-value" placeholder="Minutes">
-                <button id="issue-coupon">Issue Coupon</button>
-            </div>
-        </div>
-    </section>
+  <!-- Coupons -->
+  <section class="coupon-section">
+    <h2>Coupons</h2>
+    <div id="couponList"></div>
+  </section>
 
-    <script type="module" src="script.js"></script>
+  <!-- Admin Panel -->
+  <section id="adminPanel" class="admin-panel hidden">
+    <h2>Admin Controls</h2>
+
+    <div class="admin-row">
+      <input id="couponName" placeholder="Coupon name">
+      <input id="couponMinutes" type="number" placeholder="Minutes">
+      <button id="createCoupon">Create Coupon</button>
+    </div>
+  </section>
+
+  <script type="module" src="script.js"></script>
 </body>
 </html>
