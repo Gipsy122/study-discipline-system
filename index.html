@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS - FailSafe</title>
+    <title>Discipline OS</title>
+    <link rel="stylesheet" href="style.css">
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -18,125 +20,102 @@
             appId: "1:183715810841:web:b037baebaad795de976488"
         };
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const db = getDatabase(app);
-            const statsRef = ref(db, 'discipline/stats');
-            const timerRef = ref(db, 'discipline/activeTimer');
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const statsRef = ref(db, 'discipline/stats');
+        const timerRef = ref(db, 'discipline/activeTimer');
+        const isAdmin = window.location.search.includes('admin=true');
 
-            const isAdmin = window.location.search.includes('admin=true');
+        window.systemBoot = () => {
+            set(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
+            set(timerRef, { running: false, name: "Idle" });
+            alert("Database Initialized!");
+        };
 
-            // 1. Initialize System Data
-            window.systemBoot = () => {
-                set(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
-                set(timerRef, { running: false, name: "Idle", goal: "00:00" });
-                alert("Database Initialized!");
-            };
-
-            // 2. Sync Stats
-            onValue(statsRef, (snapshot) => {
-                const d = snapshot.val();
-                if (d) {
-                    document.getElementById('pool').innerText = d.breakPool + "m";
-                    document.getElementById('buffer').innerText = d.buffer + "m";
-                    document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
-                }
+        onValue(statsRef, (snapshot) => {
+            const d = snapshot.val();
+            if (d) {
+                document.getElementById('pool').innerText = d.breakPool + "m";
+                document.getElementById('buffer').innerText = d.buffer + "m";
+                document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
                 document.getElementById('boot-screen').style.display = 'none';
                 document.getElementById('app-content').style.display = 'block';
                 if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
-            });
+            }
+        });
 
-            // 3. Stopwatch Logic
-            let ticker;
-            onValue(timerRef, (snapshot) => {
-                const t = snapshot.val();
-                const box = document.getElementById('timer-box');
-                clearInterval(ticker);
-                if (t && t.running) {
-                    box.style.display = 'block';
-                    document.getElementById('timer-name').innerText = t.name;
-                    ticker = setInterval(() => {
-                        const diff = Math.floor((Date.now() - t.startTime) / 1000);
-                        document.getElementById('timer-clock').innerText = 
-                            Math.floor(diff/60) + ":" + String(diff%60).padStart(2,'0');
-                    }, 1000);
-                } else {
-                    box.style.display = 'none';
-                }
-            });
+        let ticker;
+        onValue(timerRef, (snapshot) => {
+            const t = snapshot.val();
+            const box = document.getElementById('timer-box');
+            clearInterval(ticker);
+            if (t && t.running) {
+                box.style.display = 'block';
+                document.getElementById('timer-name').innerText = t.name;
+                ticker = setInterval(() => {
+                    const diff = Math.floor((Date.now() - t.startTime) / 1000);
+                    document.getElementById('timer-clock').innerText = 
+                        Math.floor(diff/60) + ":" + String(diff%60).padStart(2,'0');
+                }, 1000);
+            } else { box.style.display = 'none'; }
+        });
 
-            window.startTimer = (name, limit, isStrict) => {
-                set(timerRef, { name, limit, isStrict, startTime: Date.now(), running: true });
-            };
+        window.startTimer = (name, limit, isStrict) => {
+            set(timerRef, { name, limit, isStrict, startTime: Date.now(), running: true });
+        };
 
-            window.stopTimer = () => {
-                onValue(timerRef, (s) => {
-                    const t = s.val();
-                    if(t.running) {
-                        const elapsed = Math.round((Date.now() - t.startTime) / 60000);
-                        const overtime = elapsed - t.limit;
-                        if(overtime > 0) {
-                            onValue(statsRef, (ss) => {
-                                let d = ss.val();
-                                if(t.isStrict) d.breakPool -= overtime;
-                                else {
-                                    if(d.buffer >= overtime) d.buffer -= overtime;
-                                    else { d.breakPool -= (overtime - d.buffer); d.buffer = 0; }
-                                }
-                                update(statsRef, d);
-                            }, {onlyOnce: true});
-                        }
-                        set(timerRef, { running: false, name: "Idle" });
+        window.stopTimer = () => {
+            onValue(timerRef, (s) => {
+                const t = s.val();
+                if(t.running) {
+                    const elapsed = Math.round((Date.now() - t.startTime) / 60000);
+                    const overtime = elapsed - t.limit;
+                    if(overtime > 0) {
+                        onValue(statsRef, (ss) => {
+                            let d = ss.val();
+                            if(t.isStrict) d.breakPool -= overtime;
+                            else {
+                                if(d.buffer >= overtime) d.buffer -= overtime;
+                                else { d.breakPool -= (overtime - d.buffer); d.buffer = 0; }
+                            }
+                            update(statsRef, d);
+                        }, {onlyOnce: true});
                     }
-                }, {onlyOnce: true});
-            };
-
-        } catch (e) {
-            document.body.innerHTML = "<h1>Setup Error</h1><p>" + e.message + "</p>";
-        }
+                    set(timerRef, { running: false, name: "Idle" });
+                }
+            }, {onlyOnce: true});
+        };
     </script>
-    <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; }
-        #app-content, #admin-panel, #timer-box { display: none; }
-        .card { background: #111; border: 1px solid #333; padding: 30px; border-radius: 25px; margin-bottom: 20px; }
-        .pool { font-size: 5rem; font-weight: 800; color: #ff3e3e; line-height: 1; }
-        .timer-card { background: #fff; color: #000; padding: 20px; border-radius: 20px; margin: 20px 0; }
-        .admin-box { border: 2px solid #ffd700; padding: 20px; border-radius: 20px; background: #0a0a0a; }
-        button { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-start { background: #222; color: #fff; border: 1px solid #444; }
-        .btn-stop { background: #ff3e3e; color: #fff; }
-    </style>
 </head>
 <body>
-    <div id="boot-screen">
-        <h2>System Booting...</h2>
-        <p>If this stays for >5 seconds, check your Firebase Rules.</p>
-        <button onclick="systemBoot()" style="background:gold">FORCE INITIALIZE</button>
+    <div id="boot-screen" style="padding-top: 100px;">
+        <h2 class="label-dim">System Status: Offline</h2>
+        <button class="btn-boot" onclick="systemBoot()">INITIALIZE SYSTEM</button>
     </div>
 
     <div id="app-content">
         <div class="card">
             <div id="pool" class="pool">---</div>
-            <p style="color:#888; font-size:0.8rem; letter-spacing:2px;">REMAINING BREAK TIME</p>
-            <div style="display:flex; justify-content: space-around; margin-top: 20px;">
-                <div><small>BUFFER</small><br><b id="buffer">--</b></div>
-                <div><small>SLEEP</small><br><b id="sleep-val">--</b></div>
+            <div class="label-dim">Break Pool Remaining</div>
+            <div class="sub-stats">
+                <div><div class="label-dim">Buffer</div><b id="buffer">--</b></div>
+                <div><div class="label-dim">Sleep</div><b id="sleep-val">--</b></div>
             </div>
         </div>
 
         <div id="timer-box" class="timer-card">
-            <div id="timer-name" style="font-size:0.8rem; color:#666">ACTIVITY</div>
-            <div id="timer-clock" style="font-size:3rem; font-weight:bold">0:00</div>
-            <button class="btn-stop" onclick="stopTimer()" id="admin-stop">STOP & AUDIT</button>
+            <div id="timer-name" class="label-dim" style="color:#666">ACTIVITY</div>
+            <div id="timer-clock" class="timer-clock">0:00</div>
+            <button class="btn-stop" onclick="stopTimer()">STOP & AUDIT</button>
         </div>
 
         <div id="admin-panel" class="admin-box">
-            <h3 style="color:gold; margin-top:0;">ADMIN CONTROLS</h3>
+            <div class="label-dim" style="color:var(--gold); margin-bottom:15px;">Admin Control Center</div>
             <button class="btn-start" onclick="startTimer('Bath', 30, false)">START BATH (30m)</button>
             <button class="btn-start" onclick="startTimer('Food', 45, false)">START FOOD (45m)</button>
             <button class="btn-start" onclick="startTimer('Haga', 30, false)">START HAGA (30m)</button>
-            <button class="btn-start" style="color:#ff3e3e" onclick="startTimer('Sleep', 420, true)">START SLEEP (7h)</button>
-            <button onclick="systemBoot()" style="background:#333; color:#888; margin-top:20px;">RESET DATABASE</button>
+            <button class="btn-start" style="color:var(--accent)" onclick="startTimer('Sleep', 420, true)">START SLEEP (7h)</button>
+            <button onclick="systemBoot()" style="background:transparent; color:#444; margin-top:10px;">Hard Reset System</button>
         </div>
     </div>
 </body>
