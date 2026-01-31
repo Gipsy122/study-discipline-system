@@ -1,73 +1,112 @@
 :root {
-    --bg: #0f1012;
-    --card: #1c1e22;
-    --accent: #a0c3ff;
-    --danger: #ffb4ab;
-    --text: #e2e2e6;
+    --bg: #0b0e14;
+    --card: #1c1f26;
+    --primary: #8ab4f8;
+    --accent: #c2e7ff;
+    --danger: #f28b82;
+    --text: #e8eaed;
 }
 
 body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
     margin: 0;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
 }
 
-#dashboard {
+/* Dashboard Layout */
+.dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
     width: 100%;
-    max-width: 1200px; /* Prevents stretching across ultra-wide monitors */
+    max-width: 1100px; /* Prevents stretching on wide screens */
+    margin-top: 20px;
 }
 
-.timer-block {
+.block {
     background: var(--card);
     border-radius: 28px;
-    padding: 20px;
-    text-align: center;
-    transition: transform 0.2s;
-    border: 1px solid #333;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
 }
 
-/* Android 15 Style Circular Timer */
+/* Circular Timer (Android 15 Style) */
 .timer-circle {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    border: 4px solid var(--accent);
+    border: 4px solid #3c4043;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 15px auto;
+    margin: 15px 0;
+    position: relative;
+    transition: border-color 0.3s;
+}
+
+.timer-circle.running {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px rgba(138, 180, 248, 0.3);
+}
+
+.timer-circle .time-display {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 600;
 }
 
-.timer-block.overtime .timer-circle {
-    border-color: var(--danger);
-    color: var(--danger);
+/* Main Bank Timer */
+.main-timer-block {
+    text-align: center;
+    background: var(--card);
+    padding: 20px 60px;
+    border-radius: 40px;
+    border: 1px solid #3c4043;
 }
 
-.controls button {
-    background: var(--accent);
+#bank-timer {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Visibility Logic */
+.admin-controls, .admin-only { display: none; }
+body.admin-mode .admin-controls, 
+body.admin-mode .admin-only { display: block; }
+
+/* Buttons & Inputs */
+button {
+    background: var(--primary);
     border: none;
     padding: 10px 20px;
     border-radius: 20px;
+    color: #000;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
+    margin: 5px;
 }
 
-/* Admin vs User Visibility */
-.admin-only { display: none; }
-.admin-mode .admin-only { display: block; }
-.admin-mode .user-only { display: none; }
+input {
+    background: #2d3139;
+    border: 1px solid #3c4043;
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    width: 80px;
+}
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-    #dashboard { grid-template-columns: 1fr; }
+.coupon-section {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
 }
