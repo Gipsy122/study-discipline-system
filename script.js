@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Your verified config
 const firebaseConfig = {
     apiKey: "AIzaSyBteFv0YOR7x9YGhcphPr80F01PpLjVKc",
     authDomain: "study-tracker-29.firebaseapp.com",
@@ -16,84 +15,120 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statsRef = ref(db, 'discipline/stats');
 const timerRef = ref(db, 'discipline/activeTimer');
+const couponRef = ref(db, 'discipline/inventory');
 
 const isAdmin = window.location.search.includes('admin=true');
 
-// Attach functions to window so HTML buttons can see them
-window.systemBoot = () => {
-    set(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
-    set(timerRef, { running: false, name: "Idle", startTime: 0, limit: 0, isStrict: false });
-};
-
-// Sync Data from Firebase
+// --- SYNC DATA ---
 onValue(statsRef, (snapshot) => {
-    const d = snapshot.val();
-    if (d) {
-        document.getElementById('pool').innerText = d.breakPool + "m";
-        document.getElementById('buffer').innerText = d.buffer + "m";
-        document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
-        document.getElementById('boot-screen').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-        if(isAdmin) document.getElementById('admin-panel').style.display = 'flex';
-    }
+    const d = snapshot.val() || { breakPool: 210, buffer: 20, sleepLimit: 7 };
+    document.getElementById('pool').innerText = d.breakPool + "m";
+    document.getElementById('buffer').innerText = d.buffer + "m";
+    document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
+    if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
 });
 
-// Timer Ticker Logic
 let ticker;
 onValue(timerRef, (snapshot) => {
     const t = snapshot.val();
-    const clock = document.getElementById('timer-clock');
-    const nameDisplay = document.getElementById('timer-name');
+    const box = document.getElementById('active-timer-box');
     clearInterval(ticker);
     if (t && t.running) {
-        nameDisplay.innerText = "LIVE: " + t.name;
+        box.style.display = 'block';
+        document.getElementById('timer-name').innerText = t.name;
         ticker = setInterval(() => {
-            const diff = Math.floor((Date.now() - t.startTime) / 1000);
-            const mins = Math.floor(diff / 60);
-            const secs = String(diff % 60).padStart(2, '0');
-            clock.innerText = `${mins}:${secs}`;
+            const diff = Math.floor((Date.now() - t.startTime) / 60000);
+            const seconds = Math.floor(((Date.now() - t.startTime) % 60000) / 1000);
+            document.getElementById('timer-clock').innerText = `${diff}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if(diff >= t.limit) document.getElementById('timer-clock').style.color = "#ff3e3e";
         }, 1000);
-    } else {
-        nameDisplay.innerText = "SYSTEM IDLE";
-        clock.innerText = "00:00";
+    } else { box.style.display = 'none'; }
+});
+
+onValue(couponRef, (snapshot) => {
+    const list = document.getElementById('coupon-list');
+    list.innerHTML = "";
+    const data = snapshot.val();
+    for(let id in data) {
+        if(!data[id].used) {
+            let div = document.createElement('div');
+            div.className = "coupon-card";
+            div.innerHTML = `🎟️ <b>${data[id].name}</b><br><small>${data[id].desc}</small>`;
+            if(!isAdmin) div.onclick = () => redeemCoupon(id, data[id]);
+            list.appendChild(div);
+        }
     }
 });
 
-window.startTimer = (name, limit, isStrict) => {
-    set(timerRef, { name, limit, isStrict, startTime: Date.now(), running: true });
-};
-
-window.stopTimer = () => {
-    onValue(timerRef, (s) => {
-        const t = s.val();
-        if(t && t.running) {
-            const elapsed = Math.round((Date.now() - t.startTime) / 60000);
-            applyLogic(t.name, elapsed, t.limit, t.isStrict);
-            set(timerRef, { running: false, name: "Idle" });
-        }
-    }, {onlyOnce: true});
-};
-
-window.manualInput = (name, limit, isStrict) => {
-    const used = prompt(`Total minutes spent on ${name}:`);
-    if(used && !isNaN(used)) applyLogic(name, parseInt(used), limit, isStrict);
-};
-
-function applyLogic(name, used, limit, isStrict) {
-    const overtime = used - limit;
-    if(overtime > 0) {
+// --- CORE FUNCTIONS ---
+function applyMath(name, used, limit, isStrict) {
+    const over = used - limit;
+    if(over > 0) {
         onValue(statsRef, (s) => {
             let d = s.val();
-            if(isStrict) {
-                d.breakPool -= overtime;
-            } else {
-                if(d.buffer >= overtime) d.buffer -= overtime;
-                else {
-                    d.breakPool -= (overtime - d.buffer);
-                    d.buffer = 0;
-                }
+            if(isStrict === "true") d.breakPool -= over;
+            else {
+                if(d.buffer >= over) d.buffer -= over;
+                else { d.breakPool -= (over - d.buffer); d.buffer = 0; }
             }
             update(statsRef, d);
         }, {onlyOnce: true});
     }
+}
+
+function redeemCoupon(id, c) {
+    onValue(statsRef, (s) => {
+        let d = s.val();
+        if(c.type === 'sleep') d.sleepLimit = c.value;
+        if(c.type === 'break') d.breakPool += c.value;
+        update(statsRef, d);
+        update(ref(db, `discipline/inventory/${id}`), { used: true });
+    }, {onlyOnce: true});
+}
+
+// --- EVENT LISTENERS (Admin Only) ---
+if(isAdmin) {
+    document.getElementById('boot-btn').onclick = () => {
+        set(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
+        set(timerRef, { running: false });
+        alert("Booted.");
+    };
+
+    document.querySelectorAll('.btn-start').forEach(btn => {
+        btn.onclick = () => {
+            set(timerRef, { 
+                name: btn.dataset.task, 
+                limit: parseInt(btn.dataset.limit), 
+                isStrict: btn.dataset.strict, 
+                startTime: Date.now(), 
+                running: true 
+            });
+        };
+    });
+
+    document.querySelectorAll('.btn-input').forEach(btn => {
+        btn.onclick = () => {
+            let used = prompt(`Minutes for ${btn.dataset.task}?`);
+            if(used) applyMath(btn.dataset.task, parseInt(used), parseInt(btn.dataset.limit), btn.dataset.strict);
+        };
+    });
+
+    document.getElementById('stop-btn').onclick = () => {
+        onValue(timerRef, (s) => {
+            const t = s.val();
+            if(t.running) {
+                const elapsed = Math.round((Date.now() - t.startTime) / 60000);
+                applyMath(t.name, elapsed, t.limit, t.isStrict);
+                set(timerRef, { running: false });
+            }
+        }, {onlyOnce: true});
+    };
+
+    document.getElementById('grant-sleep').onclick = () => {
+        push(couponRef, { name: 'Sleep Pass', type: 'sleep', value: 8, desc: '+1h Sleep Extension', used: false });
+    };
+    
+    document.getElementById('grant-break').onclick = () => {
+        push(couponRef, { name: 'Extra Break', type: 'break', value: 30, desc: '+30m Break Refill', used: false });
+    };
 }
