@@ -1,77 +1,94 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const firebaseConfig = { /* USE YOUR PREVIOUS CONFIG HERE */ };
+const firebaseConfig = {
+    apiKey: "AIzaSyBteFv0YOR7x9YGhcphPr80F01PpLjVKc",
+    authDomain: "study-tracker-29.firebaseapp.com",
+    databaseURL: "https://study-tracker-29-default-rtdb.firebaseio.com",
+    projectId: "study-tracker-29",
+    storageBucket: "study-tracker-29.firebasestorage.app",
+    messagingSenderId: "183715810841",
+    appId: "1:183715810841:web:b037baebaad795de976488"
+};
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
 const statsRef = ref(db, 'discipline/stats');
 const activeRef = ref(db, 'discipline/active');
 const isAdmin = window.location.search.includes('admin=true');
 
-let timers = {};
+let runningTimers = {};
 
-// --- REALTIME SYNC ---
+// --- REALTIME LISTENER ---
 onValue(statsRef, (snap) => {
     const d = snap.val() || { pool: 210, buffer: 20 };
-    document.getElementById('main-pool').innerText = formatTime(d.pool);
-    document.getElementById('buffer-val').innerText = formatTime(d.buffer);
+    document.getElementById('pool-display').innerText = formatHMS(d.pool * 60);
+    document.getElementById('buffer-display').innerText = formatHMS(d.buffer * 60);
 });
 
-// --- CORE LOGIC ---
+// --- TIMER LOGIC ---
 window.toggleTimer = (id, limit) => {
-    if (timers[id]) {
-        clearInterval(timers[id].interval);
-        delete timers[id];
-        update(activeRef, { [id]: null });
-    } else {
-        timers[id] = { start: Date.now(), limit: limit, elapsed: 0 };
-        timers[id].interval = setInterval(() => processTick(id, limit), 1000);
-        update(activeRef, { [id]: { running: true, start: Date.now() } });
+    if (runningTimers[id]) {
+        clearInterval(runningTimers[id]);
+        delete runningTimers[id];
+        return;
     }
+    
+    let elapsedSecs = 0;
+    runningTimers[id] = setInterval(() => {
+        elapsedSecs++;
+        const elapsedMins = elapsedSecs / 60;
+        
+        // Update UI
+        updateUI(id, elapsedSecs, limit);
+
+        // Auto Deduction
+        if (elapsedMins > limit && isAdmin) {
+            updatePool(-1/60); // 1 sec off pool
+        }
+    }, 1000);
 };
 
-window.manualAdjust = (id, val, limit) => {
-    const mins = parseInt(val);
-    if (!mins) return;
+window.forwardTime = (id, limit) => {
+    const val = parseInt(document.getElementById(`adj-${id}`).value);
+    if (!val) return;
     
-    // If input + current > limit, deduct from pool
-    if (mins > limit) {
-        const overflow = mins - limit;
-        deductFromPool(overflow);
+    if (val > limit) {
+        updatePool(-(val - limit));
     }
-    alert(`Adjusted ${id} by ${mins}m`);
+    alert(`${id} forward by ${val}m`);
 };
 
-function processTick(id, limit) {
-    timers[id].elapsed++;
-    const currentMins = timers[id].elapsed / 60;
-    
-    // LIVE DEDUCTION
-    if (currentMins > limit) {
-        deductFromPool(1/60); // Deduct 1 second's worth of minutes
-    }
-    
-    // Update UI
+function updateUI(id, currentSecs, limit) {
+    const el = document.getElementById(`time-${id}`);
+    const ring = document.getElementById(`ring-${id}`);
     const block = document.getElementById(`block-${id}`);
-    block.querySelector('.time-readout').innerText = formatTime(currentMins);
+    
+    el.innerText = formatHMS(currentSecs);
+    
+    // Ring logic
+    const prog = Math.min((currentSecs / (limit * 60)) * 283, 283);
+    ring.style.strokeDashoffset = 283 - prog;
+
+    if (currentSecs > (limit * 60)) {
+        block.classList.add('violation');
+    }
 }
 
-function deductFromPool(amt) {
+function updatePool(amt) {
     onValue(statsRef, (s) => {
-        let d = s.val();
-        d.pool -= amt;
-        update(statsRef, d);
-    }, {onlyOnce: true});
+        const d = s.val();
+        update(statsRef, { pool: d.pool + amt });
+    }, { onlyOnce: true });
 }
 
-function formatTime(mins) {
-    const m = Math.floor(mins);
-    const s = Math.floor((mins % 1) * 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+function formatHMS(seconds) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h > 0 ? h + ':' : ''}${m < 10 && h > 0 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-// --- INITIALIZE ADMIN ---
 if (!isAdmin) {
-    document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.admin-ui').forEach(e => e.style.display = 'none');
 }
