@@ -3,89 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS | Dashboard</title>
+    <title>Discipline OS | Command Center</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="app-container">
-        <header class="global-stats">
-            <div class="stat-block main-pool">
+<body class="user-view"> <div class="app-container">
+        <header class="main-monitor">
+            <div class="block main-pool-block">
                 <span class="label">Total Break Pool</span>
-                <h1 id="main-pool-display">210:00</h1>
-                <div class="pool-progress-bar">
-                    <div id="pool-fill" class="fill"></div>
+                <div class="pool-display">
+                    <h1 id="main-pool-clock">210:00</h1>
+                    <div class="pool-bar">
+                        <div id="pool-fill" class="fill"></div>
+                    </div>
+                </div>
+                <div class="buffer-badge">
+                    Buffer: <span id="buffer-val">20</span>m
                 </div>
             </div>
         </header>
 
         <main class="dashboard-grid">
+            
             <div class="tile" id="tile-bath">
                 <div class="tile-header">
                     <span class="label">Bath</span>
-                    <span class="limit-tag">30m</span>
+                    <span class="threshold">30m</span>
                 </div>
-                <div class="timer-circle">
+                <div class="timer-container">
                     <svg viewBox="0 0 100 100">
-                        <circle class="bg" cx="50" cy="50" r="45"></circle>
-                        <circle class="progress" id="ring-bath" cx="50" cy="50" r="45"></circle>
+                        <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-bath" class="ring-progress" cx="50" cy="50" r="45"></circle>
                     </svg>
-                    <div class="time-text" id="time-bath">00:00</div>
+                    <div class="timer-text" id="clock-bath">00:00</div>
                 </div>
                 <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('bath', 30)">Start/Stop</button>
-                    <input type="number" placeholder="+ Mins" onchange="forwardTime('bath', 30, this.value); this.value=''">
+                    <button onclick="ctrlTimer('bath', 30)">Start/Stop</button>
+                    <input type="number" placeholder="+ Mins" onchange="manualForward('bath', this.value); this.value=''">
                 </div>
             </div>
 
             <div class="tile" id="tile-food">
                 <div class="tile-header">
                     <span class="label">Food</span>
-                    <span class="limit-tag">15m</span>
+                    <span class="threshold">15m</span>
                 </div>
-                <div class="timer-circle">
+                <div class="timer-container">
                     <svg viewBox="0 0 100 100">
-                        <circle class="bg" cx="50" cy="50" r="45"></circle>
-                        <circle class="progress" id="ring-food" cx="50" cy="50" r="45"></circle>
+                        <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-food" class="ring-progress" cx="50" cy="50" r="45"></circle>
                     </svg>
-                    <div class="time-text" id="time-food">00:00</div>
+                    <div class="timer-text" id="clock-food">00:00</div>
                 </div>
                 <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('food', 15)">Start/Stop</button>
-                    <input type="number" placeholder="+ Mins" onchange="forwardTime('food', 15, this.value); this.value=''">
+                    <button onclick="ctrlTimer('food', 15)">Start/Stop</button>
+                    <input type="number" placeholder="+ Mins" onchange="manualForward('food', this.value); this.value=''">
+                </div>
+            </div>
+
+            <div class="tile" id="tile-wash">
+                <div class="tile-header">
+                    <span class="label">Washroom</span>
+                    <span class="threshold">15m</span>
+                </div>
+                <div class="timer-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-wash" class="ring-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text" id="clock-wash">00:00</div>
+                </div>
+                <div class="admin-controls">
+                    <button onclick="ctrlTimer('wash', 15)">Start/Stop</button>
+                    <input type="number" placeholder="+ Mins" onchange="manualForward('wash', this.value); this.value=''">
                 </div>
             </div>
 
             <div class="tile" id="tile-sleep">
                 <div class="tile-header">
                     <span class="label">Sleep</span>
-                    <span class="limit-tag">7h</span>
+                    <span class="threshold">7h</span>
                 </div>
-                <div class="timer-circle">
+                <div class="timer-container">
                     <svg viewBox="0 0 100 100">
-                        <circle class="bg" cx="50" cy="50" r="45"></circle>
-                        <circle class="progress" id="ring-sleep" cx="50" cy="50" r="45"></circle>
+                        <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-sleep" class="ring-progress" cx="50" cy="50" r="45"></circle>
                     </svg>
-                    <div class="time-text" id="time-sleep">00:00</div>
+                    <div class="timer-text" id="clock-sleep">00:00</div>
                 </div>
                 <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('sleep', 420)">Start/Stop</button>
+                    <button onclick="ctrlTimer('sleep', 420)">Start/Stop</button>
                 </div>
             </div>
         </main>
 
-        <section class="coupons-section">
-            <div class="tile full-width">
-                <span class="label">Active Coupons</span>
-                <div id="coupon-display" class="coupon-grid"></div>
-                <div class="admin-controls" style="margin-top:15px;">
-                    <input type="text" id="cp-name" placeholder="Coupon Name">
-                    <input type="number" id="cp-val" placeholder="Value (Mins)">
-                    <button onclick="createCoupon()">Issue Coupon</button>
+        <footer class="system-footer">
+            <div class="block coupon-block">
+                <span class="label">Issued Coupons</span>
+                <div id="coupon-list" class="coupon-grid"></div>
+                <div class="admin-controls creator-row">
+                    <input type="text" id="cp-name" placeholder="Name">
+                    <input type="number" id="cp-mins" placeholder="Mins">
+                    <button onclick="issueCoupon()">Issue</button>
                 </div>
             </div>
-        </section>
-
-        <button class="admin-only reset-btn" onclick="resetSystem()">System Reset</button>
+            <button class="admin-controls boot-btn" onclick="hardReset()">BOOT SYSTEM INITIALIZE</button>
+        </footer>
     </div>
 
     <script type="module" src="script.js"></script>
