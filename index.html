@@ -3,42 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS</title>
+    <title>Discipline OS | Command Center</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="boot-screen" style="padding-top: 100px; text-align: center;">
-        <h2 style="color:#888">System Offline</h2>
+    <div id="boot-screen">
         <button class="btn-boot" onclick="systemBoot()">INITIALIZE SYSTEM</button>
     </div>
 
     <div id="app-content">
-        <div class="card">
+        <div class="card main-stats">
             <div id="pool" class="pool">---</div>
-            <div class="label-dim">Break Pool Remaining</div>
+            <div class="label-dim">Total Break Pool</div>
             <div class="sub-stats">
                 <div><div class="label-dim">Buffer</div><b id="buffer">--</b></div>
-                <div><div class="label-dim">Sleep</div><b id="sleep-val">--</b></div>
+                <div><div class="label-dim">Sleep Goal</div><b id="sleep-val">--</b></div>
             </div>
         </div>
 
         <div id="timer-box" class="timer-card">
-            <div id="timer-name" class="label-dim">ACTIVITY</div>
-            <div id="timer-clock" class="timer-clock">0:00</div>
-            <button class="btn-stop" onclick="stopTimer()">STOP & AUDIT</button>
+            <div id="timer-name" class="label-dim">SYSTEM IDLE</div>
+            <div id="timer-clock" class="timer-clock">00:00</div>
         </div>
 
         <div id="coupon-list"></div>
 
-        <div id="admin-panel" class="admin-box">
-            <div class="label-dim" style="color:var(--gold); margin-bottom:15px;">Admin Controls</div>
-            <button class="btn-start" onclick="startTimer('Bath', 30, false)">BATH (30m)</button>
-            <button class="btn-start" onclick="startTimer('Food', 45, false)">FOOD (45m)</button>
-            <button class="btn-start" onclick="startTimer('Haga', 30, false)">HAGA (30m)</button>
-            <button class="btn-start" style="color:var(--accent)" onclick="startTimer('Sleep', 420, true)">SLEEP (7h)</button>
-            <hr style="opacity:0.1; margin:20px 0;">
-            <button class="btn-boot" onclick="grantCoupon('Sleep Reward', 'sleep', 8, 'Set sleep goal to 8h')">GRANT SLEEP REWARD</button>
-            <button class="btn-boot" onclick="grantCoupon('Extra Time', 'break', 30, '+30m to Break Pool')">GRANT 30m BREAK</button>
+        <div id="admin-panel" class="admin-grid">
+            <div class="admin-header">COMMAND CENTER</div>
+            
+            <div class="control-module" id="module-bath">
+                <div class="module-label">BATH (30m)</div>
+                <div class="module-actions">
+                    <button class="btn-ctrl" onclick="startTimer('Bath', 30, false)">START</button>
+                    <button class="btn-ctrl btn-stop-alt" onclick="stopTimer()">STOP</button>
+                    <button class="btn-ctrl btn-input" onclick="manualInput('Bath', 30, false)">INPUT</button>
+                </div>
+            </div>
+
+            <div class="control-module" id="module-food">
+                <div class="module-label">FOOD (45m)</div>
+                <div class="module-actions">
+                    <button class="btn-ctrl" onclick="startTimer('Food', 45, false)">START</button>
+                    <button class="btn-ctrl btn-stop-alt" onclick="stopTimer()">STOP</button>
+                    <button class="btn-ctrl btn-input" onclick="manualInput('Food', 45, false)">INPUT</button>
+                </div>
+            </div>
+
+            <div class="control-module" id="module-haga">
+                <div class="module-label">HAGA (30m)</div>
+                <div class="module-actions">
+                    <button class="btn-ctrl" onclick="startTimer('Haga', 30, false)">START</button>
+                    <button class="btn-ctrl btn-stop-alt" onclick="stopTimer()">STOP</button>
+                    <button class="btn-ctrl btn-input" onclick="manualInput('Haga', 30, false)">INPUT</button>
+                </div>
+            </div>
+
+            <div class="control-module strict">
+                <div class="module-label">SLEEP (7h)</div>
+                <div class="module-actions">
+                    <button class="btn-ctrl" onclick="startTimer('Sleep', 420, true)">START</button>
+                    <button class="btn-ctrl btn-stop-alt" onclick="stopTimer()">STOP</button>
+                    <button class="btn-ctrl btn-input" onclick="manualInput('Sleep', 420, true)">INPUT</button>
+                </div>
+            </div>
+
+            <button class="btn-reward" onclick="grantCoupon('Extra Time', 'break', 30, '+30m Break')">GRANT REWARD</button>
         </div>
     </div>
 
