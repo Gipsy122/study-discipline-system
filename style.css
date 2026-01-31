@@ -1,124 +1,70 @@
-/* Discipline OS - Modern Minimalist Theme */
 :root {
-    --bg: #000000;
-    --card: #111111;
+    --bg: #050505;
+    --card: #111;
     --accent: #ff3e3e;
     --gold: #ffd700;
-    --text-main: #ffffff;
-    --text-dim: #888888;
-    --white-btn: #ffffff;
+    --btn-gray: #1a1a1a;
 }
 
 body {
-    background-color: var(--bg);
-    color: var(--text-main);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
 }
 
-#app-content, #admin-panel, #timer-box {
-    display: none; /* Controlled by JS */
-    width: 100%;
-    max-width: 400px;
-}
-
-/* Stats Card */
 .card {
     background: var(--card);
     border: 1px solid #222;
-    padding: 30px 20px;
-    border-radius: 28px;
-    margin-bottom: 20px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.pool {
-    font-size: 5rem;
-    font-weight: 800;
-    color: var(--accent);
-    line-height: 1;
-    margin-bottom: 10px;
-}
-
-.label-dim {
-    color: var(--text-dim);
-    font-size: 0.7rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-.sub-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 25px;
-    border-top: 1px solid #222;
-    padding-top: 20px;
-}
-
-/* Timer Box (Active Activity) */
-.timer-card {
-    background: var(--white-btn);
-    color: #000;
+    border-radius: 24px;
     padding: 25px;
-    border-radius: 24px;
-    margin: 20px 0;
-    width: 100%;
-    box-sizing: border-box;
-    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
-}
-
-.timer-clock {
-    font-size: 3.5rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-}
-
-/* Admin Controls */
-.admin-box {
-    border: 2px solid var(--gold);
-    padding: 20px;
-    border-radius: 24px;
-    background: #050505;
-    margin-top: 10px;
-    width: 100%;
+    width: 100%; max-width: 450px;
     box-sizing: border-box;
 }
 
-button {
-    width: 100%;
-    padding: 16px;
-    margin: 6px 0;
-    border-radius: 14px;
-    border: none;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: transform 0.1s;
+.pool { font-size: 4.5rem; font-weight: 900; color: var(--accent); text-align: center; }
+
+.admin-grid {
+    display: none;
+    width: 100%; max-width: 450px;
+    margin-top: 20px;
 }
 
-button:active {
-    transform: scale(0.98);
+.admin-header {
+    color: var(--gold);
+    font-size: 0.7rem; letter-spacing: 3px;
+    text-align: center; margin-bottom: 20px;
 }
 
-.btn-start {
-    background: #222;
-    color: #fff;
-    border: 1px solid #333;
+/* Control Modules */
+.control-module {
+    background: #0f0f0f;
+    border: 1px solid #222;
+    border-radius: 18px;
+    padding: 15px;
+    margin-bottom: 12px;
 }
 
-.btn-stop {
-    background: var(--accent);
-    color: #fff;
-    margin-top: 15px;
+.module-label {
+    font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; color: #aaa;
 }
 
-.btn-boot {
-    background: var(--gold);
-    color: #000;
+.module-actions {
+    display: flex; gap: 8px;
+}
+
+.btn-ctrl {
+    flex: 1; padding: 12px 5px; border-radius: 10px; border: none;
+    background: var(--btn-gray); color: #fff; font-weight: bold; cursor: pointer;
+}
+
+.btn-stop-alt { background: #331111; color: var(--accent); }
+.btn-input { background: #111; border: 1px solid #333; color: var(--gold); }
+
+.strict { border-left: 4px solid var(--accent); }
+
+.btn-reward {
+    background: var(--gold); color: #000; margin-top: 20px; padding: 18px;
+    border-radius: 15px; width: 100%; border: none; font-weight: 900; cursor: pointer;
 }
