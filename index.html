@@ -56,7 +56,33 @@
         UNAUTHORIZED VIOLATION = COMMAND DEDUCTION<br>
         RUDE BEHAVIOR WILL NOT BE TOLERATED
     </div>
+<div class="dashboard">
+    <div class="card pool-container">
+        <span class="label">BREAK POOL REMAINING</span>
+        <div class="progress-ring" style="--percent: 100">
+            <span class="pool-val" id="pool-val">210</span>
+        </div>
+        <div style="display:flex; gap: 40px;">
+            <div><small>BUFFER</small><br><b id="buffer-val">20</b>m</div>
+            <div><small>SLEEP</small><br><b id="sleep-val">7h</b></div>
+        </div>
+    </div>
 
+    <div class="card" id="live-timer-card">
+        <span class="label" id="current-task">TASK</span>
+        <div id="timer-display" style="font-size: 4rem; font-weight: 900; margin: 10px 0;">0:00</div>
+        <div id="warning-msg" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--accent);">STABILITY: NORMAL</div>
+        <button class="btn-stop" onclick="stopDiscipline()" style="margin-top: 15px; display: block;">TERMINATE ACTIVITY</button>
+    </div>
+</div>
+
+<div class="admin-grid" id="admin-controls">
+    <button onclick="startDiscipline('Bath', 30)">Start Bath (30m)</button>
+    <button onclick="startDiscipline('Food', 45)">Start Food (45m)</button>
+    <button onclick="startDiscipline('Haga', 30)">Start Haga (30m)</button>
+    <button onclick="startDiscipline('Sleep', 420)">Start Sleep (7h)</button>
+    <button onclick="quickPenalty(2)" style="color: var(--danger)">Wrong Answer (-2m)</button>
+</div>
     <h3 class="gold-text">Strict Violations</h3>
 <button class="btn-strict" onclick="deductWrongAnswer()">Wrong Answer (-2m)</button>
 
