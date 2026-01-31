@@ -1,240 +1,93 @@
-:root { 
-    --red: #ff3e3e; 
-    --gold: #ffd700; 
-    --bg: #050505; 
-    --card-bg: #111;
-    --white: #fff;
-}
-
-body { 
-    background: var(--bg); 
-    color: #fff; 
-    font-family: 'Inter', -apple-system, sans-serif; 
-    text-align: center; 
-    padding: 20px; 
-    margin: 0; 
-}
-
-.card { 
-    background: var(--card-bg); 
-    border: 1px solid #222; 
-    border-radius: 24px; 
-    padding: 25px; 
-    margin-bottom: 20px; 
-}
-
-.pool-text { 
-    font-size: 4.5rem; 
-    font-weight: 900; 
-    color: var(--red); 
-    margin: 10px 0; 
-}
-
-.label { 
-    font-size: 0.7rem; 
-    letter-spacing: 2px; 
-    color: #666; 
-    text-transform: uppercase; 
-    font-weight: bold; 
-}
-
-.stat-grid { 
-    display: flex; 
-    justify-content: space-around; 
-    margin-top: 20px; 
-    border-top: 1px solid #222; 
-    padding-top: 20px; 
-}
-
-.sub-val { 
-    font-size: 1.2rem; 
-    font-weight: bold; 
-}
-
-#active-timer-box { 
-    background: #fff; 
-    color: #000; 
-    padding: 20px; 
-    border-radius: 20px; 
-    margin: 20px 0; 
-    display: none; 
-}
-
-#timer-clock { 
-    font-size: 3.5rem; 
-    font-weight: 900; 
-}
-
-.admin-section { 
-    display: none; 
-    border: 2px solid var(--white); 
-    padding: 20px; 
-    border-radius: 24px; 
-    margin-top: 30px; 
-}
-
-.btn-row { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 10px; 
-    margin-bottom: 10px; 
-}
-
-button { 
-    padding: 14px; 
-    border-radius: 12px; 
-    border: none; 
-    font-weight: bold; 
-    cursor: pointer; 
-    transition: 0.2s; 
-}
-
-.btn-start { background: #222; color: #fff; border: 1px solid #333; }
-.btn-input { background: var(--gold); color: #000; }
-.btn-boot { background: #333; color: var(--gold); width: 100%; margin-bottom: 20px; }
-.btn-reward { background: var(--gold); color: #000; width: 100%; margin-top: 5px; }
-.btn-strict { background: var(--red); color: #fff; }
-.btn-strict-outline { border: 1px solid var(--red); background: transparent; color: var(--red); }
-
-.coupon-card { 
-    border: 2px dashed var(--gold); 
-    color: var(--gold); 
-    padding: 15px; 
-    border-radius: 15px; 
-    margin: 10px 0; 
-}
-
-
-/* Add this to the bottom of your style.css */
-@keyframes pulse-red {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); text-shadow: 0 0 10px rgba(255, 62, 62, 0.5); }
-    100% { transform: scale(1); }
-}
-
-#timer-clock {
-    transition: color 0.3s ease;
-}
-
-/* This triggers when the pool is draining */
-.violation-mode #timer-clock {
-    animation: pulse-red 1s infinite;
-}
-
-.footer-note { font-size: 0.65rem; color: #444; margin-top: 40px; }
-
-
 :root {
-    --bg: #0b0e14;
+    --bg: #0a0c10;
     --card: #161b22;
-    --accent: #00d2ff;
-    --danger: #ff3e3e;
-    --text: #e6edf3;
+    --accent: #58a6ff;
+    --danger: #f85149;
+    --text: #c9d1d9;
 }
 
 body {
-    background-color: var(--bg);
+    background: var(--bg);
     color: var(--text);
-    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Segoe UI', system-ui, sans-serif;
     margin: 0;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
-/* DASHBOARD GRID */
-.dashboard {
+.dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-    width: 100%;
-    max-width: 1000px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.card {
+.control-block {
     background: var(--card);
+    border: 1px solid #30363d;
     border-radius: 20px;
     padding: 20px;
-    border: 1px solid #30363d;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+/* CIRCULAR STANDBY TIMERS (Android 15 Style) */
+.timer-circle {
     position: relative;
-    overflow: hidden;
+    width: 100px;
+    height: 100px;
+    margin: 20px auto;
 }
 
-/* CIRCULAR PROGRESS (Ref Image Style) */
-.pool-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+.timer-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
 }
 
-.progress-ring {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: conic-gradient(var(--accent) calc(var(--percent) * 1%), #21262d 0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 15px 0;
+.timer-circle circle {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.3s;
 }
 
-.progress-ring::after {
-    content: '';
-    width: 130px;
-    height: 130px;
-    background: var(--card);
-    border-radius: 50%;
+.time-readout {
     position: absolute;
-}
-
-.pool-val {
-    position: relative;
-    z-index: 1;
-    font-size: 2.5rem;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
     font-weight: bold;
 }
 
-/* LIVE TIMER CARD */
-#live-timer-card {
-    display: none; /* Hidden until active */
-    border: 1px solid var(--accent);
-    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
-}
-
-#live-timer-card.active { display: block; }
-
-#live-timer-card.violation {
-    border-color: var(--danger);
-    animation: glow 1.5s infinite alternate;
-}
-
-@keyframes glow {
-    from { box-shadow: 0 0 5px var(--danger); }
-    to { box-shadow: 0 0 20px var(--danger); }
-}
-
-/* ADMIN PANEL */
-.admin-grid {
-    display: none;
-    grid-template-columns: 1fr 1fr;
+/* ADMIN CONTROLS */
+.admin-controls {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
-    margin-top: 20px;
-    width: 100%;
-    max-width: 1000px;
+}
+
+input {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
 }
 
 button {
-    background: #21262d;
-    color: white;
-    border: 1px solid #30363d;
-    padding: 15px;
-    border-radius: 12px;
-    cursor: pointer;
+    background: var(--accent);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
     font-weight: bold;
-    transition: 0.2s;
+    cursor: pointer;
 }
 
-button:hover { background: #30363d; border-color: var(--accent); }
-.btn-stop { background: var(--danger); border: none; grid-column: span 2; }
+.running { border: 2px solid var(--danger) !important; }
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+}
