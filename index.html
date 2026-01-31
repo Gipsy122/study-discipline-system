@@ -2,48 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Discipline OS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discipline OS v4.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="boot-screen">
-        <button onclick="systemBoot()" style="border-radius: 50px; padding: 20px 40px;">INITIALIZE OS</button>
+    <div class="card">
+        <div class="label">Total Break Pool</div>
+        <div class="pool-text" id="pool">---</div>
+        <div class="stat-grid">
+            <div><div class="label">Buffer</div><div id="buffer" class="sub-val">--</div></div>
+            <div><div class="label">Sleep</div><div id="sleep-val" class="sub-val">--</div></div>
+        </div>
     </div>
 
-    <div id="app-content" style="display:none; width: 100%; max-width: 380px;">
+    <div id="active-timer-box">
+        <div id="timer-name" class="label">ACTIVITY ACTIVE</div>
+        <div id="timer-clock">0:00</div>
+        <button id="stop-btn" class="admin-only">STOP & AUDIT</button>
+    </div>
+
+    <div class="label">Available Coupons</div>
+    <div id="coupon-list"></div>
+
+    <div id="admin-panel" class="admin-section">
+        <button id="boot-btn" class="btn-boot">🔄 RESET SYSTEM DATA</button>
         
-        <div class="glass-card">
-            <div id="pool" class="pool-val">---</div>
-            <div class="label">Break Pool Remaining</div>
-            
-            <div class="sub-stats">
-                <div>
-                    <div id="buffer" style="font-weight: bold;">--</div>
-                    <div class="label" style="font-size: 0.5rem;">Buffer</div>
-                </div>
-                <div>
-                    <div id="sleep-val" style="font-weight: bold;">--</div>
-                    <div class="label" style="font-size: 0.5rem;">Goal</div>
-                </div>
-            </div>
+        <div class="btn-row">
+            <button class="btn-start" data-task="Bath" data-limit="30" data-strict="false">Start Bath</button>
+            <button class="btn-input" data-task="Bath" data-limit="30" data-strict="false">Input Bath</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn-start" data-task="Food" data-limit="45" data-strict="false">Start Food</button>
+            <button class="btn-input" data-task="Food" data-limit="45" data-strict="false">Input Food</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn-start" data-task="Haga" data-limit="30" data-strict="false">Start Haga</button>
+            <button class="btn-input" data-task="Haga" data-limit="30" data-strict="false">Input Haga</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn-start btn-strict-outline" data-task="Sleep" data-limit="420" data-strict="true">Start Sleep</button>
+            <button class="btn-input btn-strict" data-task="Sleep" data-limit="420" data-strict="true">Input Sleep</button>
         </div>
 
-        <div class="timer-wrap">
-            <div id="timer-name" class="label">System Idle</div>
-            <div id="timer-clock">00:00</div>
-        </div>
+        <h3 class="gold-text">Grant Reward</h3>
+        <button class="btn-reward" id="grant-sleep">Grant Sleep Coupon</button>
+        <button class="btn-reward" id="grant-break">Grant Break Coupon</button>
+    </div>
 
-        <div id="admin-panel" class="admin-grid">
-            <button onclick="startTimer('Bath', 30, false)">BATH</button>
-            <button onclick="startTimer('Food', 45, false)">FOOD</button>
-            <button onclick="startTimer('Haga', 30, false)">HAGA</button>
-            <button onclick="startTimer('Sleep', 420, true)" style="color:var(--accent)">SLEEP</button>
-            <button onclick="stopTimer()" class="btn-stop">STOP ACTIVITY</button>
-            <button onclick="manualInput('Extra', 0, false)" style="grid-column: span 2; font-size: 0.6rem; opacity: 0.5;">Manual Override</button>
-        </div>
-
+    <div class="footer-note">
+        ESTIMATED STUDY TIME: 12 HRS 55 MINS<br>
+        UNAUTHORIZED VIOLATION = COMMAND DEDUCTION<br>
+        RUDE BEHAVIOR WILL NOT BE TOLERATED
     </div>
 
     <script type="module" src="script.js"></script>
