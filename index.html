@@ -8,7 +8,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIG (Your specific keys)
         const firebaseConfig = {
             apiKey: "AIzaSyBteFv0YOR7x9YGhcphPr80F01PpLjVKc",
             authDomain: "study-tracker-29.firebaseapp.com",
@@ -33,10 +32,10 @@
             document.getElementById('pool').innerText = d.breakPool + "m";
             document.getElementById('buffer').innerText = d.buffer + "m";
             document.getElementById('sleep').innerText = d.sleepLimit + "h";
-            if(isAdmin) document.getElementById('admin').style.display = 'block';
+            if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
         });
 
-        // SYNC COUPONS
+        // SYNC COUPONS (Visible to both, but only student can click)
         onValue(couponRef, (snapshot) => {
             const list = document.getElementById('coupons');
             list.innerHTML = "";
@@ -46,119 +45,100 @@
                     let div = document.createElement('div');
                     div.className = "coupon";
                     div.innerHTML = `🎟️ <b>${data[id].name}</b><br><small>${data[id].desc}</small>`;
-                    if(!isAdmin) div.onclick = () => redeem(id, data[id]);
+                    if(!isAdmin) {
+                        div.style.cursor = "pointer";
+                        div.onclick = () => redeem(id, data[id]);
+                    }
                     list.appendChild(div);
                 }
             }
         });
 
-        // SYNC LOGS
-        onValue(logRef, (snapshot) => {
-            const list = document.getElementById('logs');
-            list.innerHTML = "";
-            const data = snapshot.val();
-            Object.values(data || {}).reverse().slice(0, 5).forEach(log => {
-                let p = document.createElement('p');
-                p.style.fontSize = "0.8rem";
-                p.innerHTML = `<span style="color:#888">[${log.time}]</span> ${log.msg}`;
-                list.appendChild(p);
-            });
-        });
-
-        // LOGIC ENGINE
-        window.processBreak = (category, givenTime, isStrict) => {
-            let input = prompt(`Enter minutes used for ${category}:`);
-            if(!input) return;
-            let used = parseInt(input);
-            let overtime = used - givenTime;
+        // AUDIT LOGIC (Triggered by Admin Buttons)
+        window.auditBreak = (category, limit, isStrict) => {
+            let used = prompt(`How many minutes did she spend on ${category}?`);
+            if(!used) return;
+            let overtime = parseInt(used) - limit;
 
             if(overtime > 0) {
                 onValue(statsRef, (s) => {
                     let data = s.val();
-                    let msg = "";
                     if(isStrict) {
                         data.breakPool -= overtime;
-                        msg = `Strict Violation: ${category} overtime (${overtime}m) hit Break Pool.`;
                     } else {
                         if(data.buffer >= overtime) {
                             data.buffer -= overtime;
-                            msg = `${category} overtime (${overtime}m) hit Buffer.`;
                         } else {
-                            let remain = overtime - data.buffer;
+                            let overflow = overtime - data.buffer;
                             data.buffer = 0;
-                            data.breakPool -= remain;
-                            msg = `${category} overtime hit Buffer, then ${remain}m hit Break Pool.`;
+                            data.breakPool -= overflow;
                         }
                     }
                     update(statsRef, data);
-                    push(logRef, { msg, time: new Date().toLocaleTimeString() });
+                    push(logRef, { msg: `${category} overtime: ${overtime}m deducted.`, time: new Date().toLocaleTimeString() });
                 }, {onlyOnce: true});
             }
         };
 
-        window.grantReward = (name, type, val, desc) => {
+        window.grantCoupon = (name, type, val, desc) => {
             push(couponRef, { name, type, value: val, desc, used: false });
         };
 
-        window.manualPunish = (mins) => {
-            let reason = prompt("Reason for punishment:");
+        window.redeem = (id, coupon) => {
             onValue(statsRef, (s) => {
-                let data = s.val();
-                data.breakPool -= mins;
-                update(statsRef, data);
-                push(logRef, { msg: `ADMIN PUNISHMENT: -${mins}m (${reason})`, time: new Date().toLocaleTimeString() });
+                let d = s.val();
+                if (coupon.type === 'sleep') d.sleepLimit = coupon.value;
+                if (coupon.type === 'break') d.breakPool += coupon.value;
+                update(statsRef, d);
+                update(ref(db, `discipline/inventory/${id}`), { used: true });
+                alert("Coupon Redeemed!");
             }, {onlyOnce: true});
+        };
+
+        window.resetDaily = () => {
+            if(confirm("Reset for the day?")) {
+                update(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
+                set(logRef, null); // Clear logs
+            }
         };
     </script>
     <style>
-        :root { --bg: #050505; --accent: #ff3e3e; --glass: rgba(255,255,255,0.05); }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto; padding: 20px; margin: 0; }
-        .card { background: var(--glass); border: 1px solid #222; border-radius: 20px; padding: 25px; margin-bottom: 15px; backdrop-filter: blur(10px); }
-        .big { font-size: 4rem; font-weight: 800; color: var(--accent); margin: 10px 0; }
-        .label { font-size: 0.7rem; letter-spacing: 2px; color: #888; text-transform: uppercase; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .coupon { border: 2px dashed #ffd700; color: #ffd700; padding: 15px; border-radius: 12px; margin: 10px 0; font-size: 0.9rem; }
-        #admin { display: none; border-top: 2px solid #333; padding-top: 20px; }
-        button { background: #fff; color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: bold; width: 100%; margin: 5px 0; cursor: pointer; }
-        .p-btn { background: #ff3e3e; color: #fff; }
+        :root { --bg: #000; --accent: #ff3e3e; --gold: #ffd700; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
+        .stat-card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .pool-text { font-size: 4rem; font-weight: bold; color: var(--accent); }
+        .admin-section { display: none; border: 2px solid var(--gold); padding: 15px; border-radius: 15px; margin-top: 20px; }
+        .coupon { border: 2px dashed var(--gold); color: var(--gold); padding: 15px; border-radius: 10px; margin: 10px 0; }
+        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-audit { background: #eee; color: #000; }
+        .btn-reward { background: var(--gold); color: #000; }
+        .btn-reset { background: #333; color: #888; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="label">Break Pool Remaining</div>
-        <div id="pool" class="big">210m</div>
-        <div class="grid">
-            <div class="card" style="margin:0; padding:15px;">
-                <div class="label">Buffer</div>
-                <div id="buffer" style="font-size:1.5rem">20m</div>
-            </div>
-            <div class="card" style="margin:0; padding:15px;">
-                <div class="label">Sleep</div>
-                <div id="sleep" style="font-size:1.5rem">7h</div>
-            </div>
+    <div class="stat-card">
+        <div style="font-size: 0.8rem; color: #888;">BREAK POOL</div>
+        <div id="pool" class="pool-text">210m</div>
+        <div style="display: flex; justify-content: space-around; margin-top: 10px;">
+            <div><small>BUFFER</small><br><span id="buffer">20m</span></div>
+            <div><small>SLEEP</small><br><span id="sleep">7h</span></div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="label">Inventory & Coupons</div>
-        <div id="coupons"></div>
-    </div>
+    <div id="coupons"></div>
 
-    <div class="card" style="background:transparent; border:none;">
-        <div class="label">System Logs</div>
-        <div id="logs" style="text-align: left; margin-top: 10px;"></div>
-    </div>
-
-    <div id="admin">
-        <div class="label">Monitor Command Center</div>
-        <button onclick="processBreak('Bath', 30, false)">AUDIT BATH (30m)</button>
-        <button onclick="processBreak('Food', 45, false)">AUDIT FOOD (45m)</button>
-        <button onclick="processBreak('Sleep', 420, true)">AUDIT SLEEP (7h)</button>
-        <button class="p-btn" onclick="manualPunish(20)">RUDE BEHAVIOR (-20m)</button>
-        <button class="p-btn" onclick="manualPunish(2)">WRONG ANSWER (-2m)</button>
-        <hr style="opacity:0.1; margin:20px 0;">
-        <button style="background:#ffd700" onclick="grantReward('Sleep Pass', 'sleep', 8, '+1hr Sleep Reward')">GRANT SLEEP COUPON</button>
+    <div id="admin-panel" class="admin-section">
+        <h3 style="color: var(--gold); margin-top:0;">ADMIN CONTROLS</h3>
+        <button class="btn-audit" onclick="auditBreak('Bath', 30, false)">AUDIT BATH (30m)</button>
+        <button class="btn-audit" onclick="auditBreak('Food', 45, false)">AUDIT FOOD (45m)</button>
+        <button class="btn-audit" onclick="auditBreak('Sleep', 420, true)">AUDIT SLEEP (7h)</button>
+        
+        <h3 style="color: var(--gold);">REWARDS</h3>
+        <button class="btn-reward" onclick="grantCoupon('Sleep Reward', 'sleep', 8, '8 hours of sleep tonight')">GRANT SLEEP COUPON</button>
+        <button class="btn-reward" onclick="grantCoupon('Extra Break', 'break', 30, '+30 mins to break pool')">GRANT +30M BREAK</button>
+        
+        <button class="btn-reset" onclick="resetDaily()">DAILY RESET</button>
     </div>
 
 </body>
