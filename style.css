@@ -1,93 +1,101 @@
 :root {
-    --bg: #0f172a;
-    --card-bg: rgba(30, 41, 59, 0.7);
-    --accent: #38bdf8;
-    --danger: #f43f5e;
-    --text: #f1f5f9;
+  --bg: #0e0f13;
+  --card: #161821;
+  --accent: #4f7cff;
+  --danger: #ff5c5c;
+  --text: #eaeaf0;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
 }
 
 body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
 }
 
-.main-timer-container {
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    border-radius: 20px;
-    background: linear-gradient(145deg, #1e293b, #0f172a);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    width: 300px;
+header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-#total-break-timer { font-size: 3rem; margin: 0; color: var(--accent); }
-
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
+#total-break {
+  background: var(--card);
+  padding: 10px 14px;
+  border-radius: 12px;
 }
 
-/* Minimalist Circular Timer Block */
-.timer-block {
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    border-radius: 24px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: transform 0.2s;
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  padding: 16px;
 }
 
-.circle-svg {
-    width: 120px;
-    height: 120px;
-    transform: rotate(-90deg);
+.timer-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
 }
 
-.circle-bg { fill: none; stroke: #334155; stroke-width: 8; }
-.circle-progress {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 8;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.3s;
+.circle {
+  width: 110px;
+  height: 110px;
+  margin: auto;
 }
-
-/* Visibility Logic */
-.admin-only { display: none; }
-.admin-mode .admin-only { display: block; }
-.admin-mode .user-only { display: none; }
 
 button {
-    background: var(--accent);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 10px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 input {
-    background: #334155;
-    border: none;
-    color: white;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 5px;
+  background: #0c0d11;
+  border: 1px solid #333;
+  color: white;
+  padding: 6px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.coupon-section {
+  padding: 16px;
+}
+
+.coupon {
+  background: var(--card);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+}
+
+.admin-panel {
+  padding: 16px;
+  border-top: 1px solid #222;
+}
+
+.admin-row {
+  display: flex;
+  gap: 10px;
+}
+
+.hidden {
+  display: none;
 }
 
 @media (max-width: 600px) {
-    .grid-container { grid-template-columns: 1fr; }
+  header {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
-
