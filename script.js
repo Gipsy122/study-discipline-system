@@ -15,99 +15,58 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const stateRef = ref(db, 'discipline/os_v6');
 
+// Toggle Admin View
 const isAdmin = window.location.search.includes('admin=true');
 if (isAdmin) document.body.classList.replace('user-view', 'admin-mode');
 
-// --- FORMATTER ---
-const fmt = (s) => {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sc = s % 60;
-    return `${h > 0 ? h + ':' : ''}${m < 10 && h > 0 ? '0' : ''}${m}:${sc < 10 ? '0' : ''}${sc}`;
+// Configuration
+const TIMER_DEFAULTS = {
+    bath: 30, food: 15, washroom: 15, sleep: 420, buffer: 20
 };
 
-// --- DATA SYNC ---
+// Listen to Firebase State
 onValue(stateRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-
-    // Update Global Pool
-    document.getElementById('main-pool-clock').innerText = fmt(data.poolSecs);
-    document.getElementById('buffer-val').innerText = data.buffer;
-
-    // Update Categories
-    Object.keys(data.timers).forEach(key => {
-        const t = data.timers[key];
-        const clock = document.getElementById(`clock-${key}`);
-        const ring = document.getElementById(`ring-${key}`);
-        const tile = document.getElementById(`tile-${key}`);
-
-        let elapsed = t.elapsed;
-        if (t.running) {
-            elapsed += Math.floor((Date.now() / 1000) - t.lastStart);
-        }
-
-        clock.innerText = fmt(elapsed);
-        
-        // Ring offset (283 = circumference)
-        const limitSecs = t.limit * 60;
-        const offset = Math.max(0, 283 - (elapsed / limitSecs) * 283);
-        ring.style.strokeDashoffset = offset;
-
-        // Violation Logic
-        if (elapsed > limitSecs) {
-            tile.classList.add('violation');
-            if (isAdmin && t.running) triggerDrain(1);
-        } else {
-            tile.classList.remove('violation');
-        }
-    });
+    const data = snapshot.val() || {};
+    renderDashboard(data);
+    updateGlobalBreak(data.totalBreak || 210);
 });
 
-// --- ADMIN COMMANDS ---
-window.ctrlTimer = (key, limitMins) => {
-    onValue(stateRef, (snapshot) => {
-        const data = snapshot.val();
-        const t = data.timers[key];
-        const now = Math.floor(Date.now() / 1000);
+function renderDashboard(data) {
+    const container = document.getElementById('dashboard');
+    container.innerHTML = '';
 
-        if (t.running) {
-            t.elapsed += (now - t.lastStart);
-            t.running = false;
-        } else {
-            t.lastStart = now;
-            t.running = true;
-        }
-        update(ref(db, `discipline/os_v6/timers/${key}`), t);
-    }, { onlyOnce: true });
-};
-
-window.manualForward = (key, mins) => {
-    const addSecs = parseInt(mins) * 60;
-    onValue(stateRef, (s) => {
-        const t = s.val().timers[key];
-        t.elapsed += addSecs;
-        update(ref(db, `discipline/os_v6/timers/${key}`), t);
-    }, { onlyOnce: true });
-};
-
-function triggerDrain(s) {
-    onValue(stateRef, (snap) => {
-        const currentPool = snap.val().poolSecs;
-        update(ref(db, 'discipline/os_v6'), { poolSecs: currentPool - s });
-    }, { onlyOnce: true });
+    Object.keys(TIMER_DEFAULTS).forEach(key => {
+        const block = document.createElement('div');
+        block.className = `timer-block ${data[key]?.overtime ? 'overtime' : ''}`;
+        
+        block.innerHTML = `
+            <h3>${key.toUpperCase()}</h3>
+            <div class="timer-circle">${data[key]?.remaining || TIMER_DEFAULTS[key]}:00</div>
+            <div class="admin-only">
+                <input type="number" placeholder="Add mins" id="input-${key}">
+                <button onclick="adjustTime('${key}')">Update</button>
+                <button onclick="toggleTimer('${key}')">${data[key]?.active ? 'Stop' : 'Start'}</button>
+            </div>
+        `;
+        container.appendChild(block);
+    });
 }
 
-window.hardReset = () => {
-    if (!isAdmin) return;
-    set(stateRef, {
-        poolSecs: 12600, // 3.5 Hours
-        buffer: 20,
-        timers: {
-            bath: { elapsed: 0, running: false, limit: 30 },
-            food: { elapsed: 0, running: false, limit: 15 },
-            wash: { elapsed: 0, running: false, limit: 15 },
-            sleep: { elapsed: 0, running: false, limit: 420 }
-        }
-    });
+// Logical Functions (Exposed to Window for HTML access)
+window.adjustTime = (key) => {
+    const val = document.getElementById(`input-${key}`).value;
+    // Logic: update Firebase with new value
+    update(ref(db, `discipline/os_v6/${key}`), { remaining: parseInt(val) });
 };
+
+window.toggleTimer = (key) => {
+    // Logic: Set active state in Firebase
+    // A background process (Cloud Function or local Interval) would usually decrement these.
+};
+
+// Coupon Logic
+document.getElementById('issue-coupon')?.addEventListener('click', () => {
+    const code = document.getElementById('coupon-code').value;
+    const value = document.getElementById('coupon-value').value;
+    push(ref(db, 'discipline/coupons'), { code, value, active: true });
+});
