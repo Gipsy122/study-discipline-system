@@ -122,3 +122,119 @@ button {
 }
 
 .footer-note { font-size: 0.65rem; color: #444; margin-top: 40px; }
+
+
+:root {
+    --bg: #0b0e14;
+    --card: #161b22;
+    --accent: #00d2ff;
+    --danger: #ff3e3e;
+    --text: #e6edf3;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* DASHBOARD GRID */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+.card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid #30363d;
+    position: relative;
+    overflow: hidden;
+}
+
+/* CIRCULAR PROGRESS (Ref Image Style) */
+.pool-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-ring {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) calc(var(--percent) * 1%), #21262d 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.progress-ring::after {
+    content: '';
+    width: 130px;
+    height: 130px;
+    background: var(--card);
+    border-radius: 50%;
+    position: absolute;
+}
+
+.pool-val {
+    position: relative;
+    z-index: 1;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+/* LIVE TIMER CARD */
+#live-timer-card {
+    display: none; /* Hidden until active */
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+}
+
+#live-timer-card.active { display: block; }
+
+#live-timer-card.violation {
+    border-color: var(--danger);
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px var(--danger); }
+    to { box-shadow: 0 0 20px var(--danger); }
+}
+
+/* ADMIN PANEL */
+.admin-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 1000px;
+}
+
+button {
+    background: #21262d;
+    color: white;
+    border: 1px solid #30363d;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover { background: #30363d; border-color: var(--accent); }
+.btn-stop { background: var(--danger); border: none; grid-column: span 2; }
