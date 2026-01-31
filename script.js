@@ -1,3 +1,17 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBteFv0YOR7x9YGhcphPr80F01PpLjVKc",
+    authDomain: "study-tracker-29.firebaseapp.com",
+    databaseURL: "https://study-tracker-29-default-rtdb.firebaseio.com",
+    projectId: "study-tracker-29",
+    storageBucket: "study-tracker-29.firebasestorage.app",
+    messagingSenderId: "183715810841",
+    appId: "1:183715810841:web:b037baebaad795de976488"
+};
+
+const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statsRef = ref(db, 'discipline/stats');
 const timerRef = ref(db, 'discipline/activeTimer');
@@ -16,7 +30,12 @@ window.systemBoot = () => {
 onValue(statsRef, (snapshot) => {
     const d = snapshot.val();
     if (d) {
-@@ -39,15 +35,14 @@ onValue(statsRef, (snapshot) => {
+        document.getElementById('pool').innerText = d.breakPool + "m";
+        document.getElementById('buffer').innerText = d.buffer + "m";
+        document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
+        document.getElementById('boot-screen').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
     }
 });
 
@@ -29,11 +48,11 @@ onValue(timerRef, (snapshot) => {
     if (t && t.running) {
         box.style.display = 'block';
         document.getElementById('timer-name').innerText = t.name;
-        document.getElementById('timer-name').innerText = "LIVE: " + t.name;
         ticker = setInterval(() => {
             const diff = Math.floor((Date.now() - t.startTime) / 1000);
             document.getElementById('timer-clock').innerText = 
-@@ -56,7 +51,6 @@ onValue(timerRef, (snapshot) => {
+                Math.floor(diff/60) + ":" + String(diff%60).padStart(2,'0');
+        }, 1000);
     } else { box.style.display = 'none'; }
 });
 
@@ -41,7 +60,9 @@ onValue(timerRef, (snapshot) => {
 window.startTimer = (name, limit, isStrict) => {
     set(timerRef, { name, limit, isStrict, startTime: Date.now(), running: true });
 };
-@@ -66,50 +60,28 @@ window.stopTimer = () => {
+
+window.stopTimer = () => {
+    onValue(timerRef, (s) => {
         const t = s.val();
         if(t && t.running) {
             const elapsed = Math.round((Date.now() - t.startTime) / 60000);
@@ -57,7 +78,6 @@ window.startTimer = (name, limit, isStrict) => {
                     update(statsRef, d);
                 }, {onlyOnce: true});
             }
-            applyLogic(t.name, elapsed, t.limit, t.isStrict);
             set(timerRef, { running: false, name: "Idle" });
         }
     }, {onlyOnce: true});
@@ -66,9 +86,6 @@ window.startTimer = (name, limit, isStrict) => {
 // --- COUPON SYSTEM ---
 window.grantCoupon = (name, type, val, desc) => {
     push(couponRef, { name, type, value: val, desc, used: false });
-window.manualInput = (name, limit, isStrict) => {
-    const used = prompt(`Enter total minutes spent on ${name}:`);
-    if(used) applyLogic(name, parseInt(used), limit, isStrict);
 };
 
 onValue(couponRef, (snapshot) => {
@@ -83,18 +100,6 @@ onValue(couponRef, (snapshot) => {
             if(!isAdmin) div.onclick = () => redeem(id, data[id]);
             list.appendChild(div);
         }
-function applyLogic(name, used, limit, isStrict) {
-    const overtime = used - limit;
-    if(overtime > 0) {
-        onValue(statsRef, (s) => {
-            let d = s.val();
-            if(isStrict) d.breakPool -= overtime;
-            else {
-                if(d.buffer >= overtime) d.buffer -= overtime;
-                else { d.breakPool -= (overtime - d.buffer); d.buffer = 0; }
-            }
-            update(statsRef, d);
-        }, {onlyOnce: true});
     }
 });
 
@@ -108,4 +113,3 @@ window.redeem = (id, coupon) => {
         alert("Reward Activated!");
     }, {onlyOnce: true});
 };
-}
