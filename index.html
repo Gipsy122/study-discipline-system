@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,24 +7,23 @@
     <title>Study Discipline System</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="user-view"> 
-
-    <header class="main-header">
-        <div class="total-break-card">
-            <p>TOTAL BREAK REMAINING</p>
-            <h1 id="global-timer">210:00</h1>
+<body class="user-view"> <header>
+        <div class="total-break-container">
+            <h2>Total Break Time Remaining</h2>
+            <div id="main-break-timer">210:00</div>
         </div>
     </header>
 
-    <div id="dashboard" class="grid-container">
-        </div>
+    <main id="dashboard">
+        </main>
 
-    <section class="coupon-area">
-        <div id="coupon-display"></div>
-        <div class="admin-only admin-controls">
-            <input type="text" id="cpn-code" placeholder="Code">
-            <input type="number" id="cpn-val" placeholder="Mins">
-            <button id="add-cpn">Create Coupon</button>
+    <section id="coupon-section">
+        <h3>Available Rewards</h3>
+        <div id="coupon-list"></div>
+        <div class="admin-only">
+            <input type="text" id="coupon-code" placeholder="Code (e.g. BONUS10)">
+            <input type="number" id="coupon-value" placeholder="Mins">
+            <button id="issue-coupon">Issue Coupon</button>
         </div>
     </section>
 
