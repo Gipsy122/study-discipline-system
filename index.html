@@ -3,82 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline OS | Admin</title>
+    <title>Discipline OS | Command Center</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
         <header class="glass-header">
-            <div class="pool-display">
+            <div class="pool-box">
                 <span class="label">TOTAL BREAK POOL</span>
-                <div class="main-timer" id="main-pool">210:00</div>
+                <div class="main-val" id="pool-display">210:00</div>
             </div>
-            <div class="buffer-display">
-                <span class="label">BUFFER</span>
-                <div id="buffer-val">20:00</div>
+            <div class="buffer-box">
+                <span class="label">STUDY BUFFER</span>
+                <div class="main-val" id="buffer-display">20:00</div>
             </div>
         </header>
 
         <main class="dashboard-grid">
-            <section class="control-block" id="block-bath">
+            <section class="card-block" id="block-bath">
                 <h3>BATH</h3>
-                <div class="timer-circle" data-limit="30">
-                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
-                    <span class="time-readout">30:00</span>
+                <div class="timer-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-bath" class="prog" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="time-text" id="time-bath">30:00</div>
                 </div>
-                <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('bath', 30)">START</button>
-                    <input type="number" placeholder="+ min" onchange="manualAdjust('bath', this.value, 30)">
+                <div class="admin-ui">
+                    <button class="btn-primary" onclick="toggleTimer('bath', 30)">START</button>
+                    <div class="input-group">
+                        <input type="number" id="adj-bath" placeholder="Min">
+                        <button onclick="forwardTime('bath', 30)">ADD</button>
+                    </div>
                 </div>
             </section>
 
-            <section class="control-block" id="block-food">
+            <section class="card-block" id="block-food">
                 <h3>FOOD</h3>
-                <div class="timer-circle" data-limit="15">
-                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
-                    <span class="time-readout">15:00</span>
+                <div class="timer-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-food" class="prog" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="time-text" id="time-food">15:00</div>
                 </div>
-                <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('food', 15)">START</button>
-                    <input type="number" placeholder="+ min" onchange="manualAdjust('food', this.value, 15)">
+                <div class="admin-ui">
+                    <button class="btn-primary" onclick="toggleTimer('food', 15)">START</button>
+                    <div class="input-group">
+                        <input type="number" id="adj-food" placeholder="Min">
+                        <button onclick="forwardTime('food', 15)">ADD</button>
+                    </div>
                 </div>
             </section>
 
-            <section class="control-block" id="block-washroom">
+            <section class="card-block" id="block-wash">
                 <h3>WASHROOM</h3>
-                <div class="timer-circle" data-limit="15">
-                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
-                    <span class="time-readout">15:00</span>
+                <div class="timer-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-wash" class="prog" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="time-text" id="time-wash">15:00</div>
                 </div>
-                <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('washroom', 15)">START</button>
-                    <input type="number" placeholder="+ min" onchange="manualAdjust('washroom', this.value, 15)">
+                <div class="admin-ui">
+                    <button class="btn-primary" onclick="toggleTimer('wash', 15)">START</button>
+                    <div class="input-group">
+                        <input type="number" id="adj-wash" placeholder="Min">
+                        <button onclick="forwardTime('wash', 15)">ADD</button>
+                    </div>
                 </div>
             </section>
 
-            <section class="control-block" id="block-sleep">
+            <section class="card-block" id="block-sleep">
                 <h3>SLEEP</h3>
-                <div class="timer-circle" data-limit="420">
-                    <svg><circle cx="50" cy="50" r="45"></circle></svg>
-                    <span class="time-readout">7h</span>
+                <div class="timer-container">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="ring-sleep" class="prog" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="time-text" id="time-sleep">7:00:00</div>
                 </div>
-                <div class="admin-controls">
-                    <button class="btn-toggle" onclick="toggleTimer('sleep', 420)">START</button>
+                <div class="admin-ui">
+                    <button class="btn-primary" onclick="toggleTimer('sleep', 420)">START</button>
                 </div>
             </section>
         </main>
 
-        <section class="coupon-area card">
-            <h3>COUPON MANAGEMENT</h3>
-            <div class="admin-controls" id="coupon-creator">
+        <section class="coupon-section card-block">
+            <h3>COUPON MANAGER</h3>
+            <div class="admin-ui coupon-creator">
                 <input type="text" id="cp-name" placeholder="Coupon Name">
-                <input type="number" id="cp-val" placeholder="Value (min)">
-                <button onclick="issueCoupon()">ISSUE COUPON</button>
+                <input type="number" id="cp-val" placeholder="Min">
+                <button class="btn-primary" onclick="createCoupon()">ISSUE</button>
             </div>
-            <div id="coupon-display-area" class="coupon-grid"></div>
+            <div id="coupon-list" class="coupon-grid"></div>
         </section>
     </div>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
