@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBteFv0YOR7x9YGhcphPr80F01PpLjVKc",
@@ -15,120 +15,84 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statsRef = ref(db, 'discipline/stats');
 const timerRef = ref(db, 'discipline/activeTimer');
-const couponRef = ref(db, 'discipline/inventory');
 
 const isAdmin = window.location.search.includes('admin=true');
+let localDeductionTracker = 0; 
 
-// --- SYNC DATA ---
+// --- DATABASE SYNC ---
 onValue(statsRef, (snapshot) => {
     const d = snapshot.val() || { breakPool: 210, buffer: 20, sleepLimit: 7 };
-    document.getElementById('pool').innerText = d.breakPool + "m";
-    document.getElementById('buffer').innerText = d.buffer + "m";
+    document.getElementById('pool-val').innerText = d.breakPool;
+    document.getElementById('buffer-val').innerText = d.buffer;
     document.getElementById('sleep-val').innerText = d.sleepLimit + "h";
-    if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
+    
+    // Update Ring Progress (Visual)
+    const percent = (d.breakPool / 210) * 100;
+    document.querySelector('.progress-ring').style.setProperty('--percent', percent);
 });
 
 let ticker;
 onValue(timerRef, (snapshot) => {
     const t = snapshot.val();
-    const box = document.getElementById('active-timer-box');
+    const timerCard = document.getElementById('live-timer-card');
     clearInterval(ticker);
+
     if (t && t.running) {
-        box.style.display = 'block';
-        document.getElementById('timer-name').innerText = t.name;
+        timerCard.classList.add('active');
+        document.getElementById('current-task').innerText = t.name;
+        
         ticker = setInterval(() => {
-            const diff = Math.floor((Date.now() - t.startTime) / 60000);
-            const seconds = Math.floor(((Date.now() - t.startTime) % 60000) / 1000);
-            document.getElementById('timer-clock').innerText = `${diff}:${seconds < 10 ? '0' : ''}${seconds}`;
-            if(diff >= t.limit) document.getElementById('timer-clock').style.color = "#ff3e3e";
+            const elapsedMs = Date.now() - t.startTime;
+            const elapsedMins = Math.floor(elapsedMs / 60000);
+            const secs = Math.floor((elapsedMs % 60000) / 1000);
+            
+            document.getElementById('timer-display').innerText = `${elapsedMins}:${secs < 10 ? '0' : ''}${secs}`;
+
+            // VIOLATION LOGIC: Threshold is t.limit
+            if (elapsedMins >= t.limit) {
+                timerCard.classList.add('violation');
+                document.getElementById('warning-msg').innerText = "⚠️ SYSTEM OVERLOAD: DRAINING POOL";
+                
+                // Admin handles the actual database deduction
+                if (isAdmin && elapsedMins > localDeductionTracker) {
+                    localDeductionTracker = elapsedMins;
+                    deductFromPool(1);
+                }
+            } else {
+                timerCard.classList.remove('violation');
+                document.getElementById('warning-msg').innerText = "STABILITY: NORMAL";
+            }
         }, 1000);
-    } else { box.style.display = 'none'; }
-});
-
-onValue(couponRef, (snapshot) => {
-    const list = document.getElementById('coupon-list');
-    list.innerHTML = "";
-    const data = snapshot.val();
-    for(let id in data) {
-        if(!data[id].used) {
-            let div = document.createElement('div');
-            div.className = "coupon-card";
-            div.innerHTML = `🎟️ <b>${data[id].name}</b><br><small>${data[id].desc}</small>`;
-            if(!isAdmin) div.onclick = () => redeemCoupon(id, data[id]);
-            list.appendChild(div);
-        }
+    } else {
+        timerCard.classList.remove('active');
+        localDeductionTracker = 0;
     }
 });
 
-// --- CORE FUNCTIONS ---
-function applyMath(name, used, limit, isStrict) {
-    const over = used - limit;
-    if(over > 0) {
-        onValue(statsRef, (s) => {
-            let d = s.val();
-            if(isStrict === "true") d.breakPool -= over;
-            else {
-                if(d.buffer >= over) d.buffer -= over;
-                else { d.breakPool -= (over - d.buffer); d.buffer = 0; }
-            }
-            update(statsRef, d);
-        }, {onlyOnce: true});
-    }
-}
-
-function redeemCoupon(id, c) {
+// --- CORE ACTIONS ---
+async function deductFromPool(amount) {
     onValue(statsRef, (s) => {
-        let d = s.val();
-        if(c.type === 'sleep') d.sleepLimit = c.value;
-        if(c.type === 'break') d.breakPool += c.value;
-        update(statsRef, d);
-        update(ref(db, `discipline/inventory/${id}`), { used: true });
-    }, {onlyOnce: true});
+        const current = s.val().breakPool;
+        update(statsRef, { breakPool: current - amount });
+    }, { onlyOnce: true });
 }
 
-// --- EVENT LISTENERS (Admin Only) ---
-if(isAdmin) {
-    document.getElementById('boot-btn').onclick = () => {
-        set(statsRef, { breakPool: 210, buffer: 20, sleepLimit: 7 });
+if (isAdmin) {
+    document.getElementById('admin-controls').style.display = 'grid';
+
+    window.startDiscipline = (task, limit) => {
+        localDeductionTracker = limit; // Start tracking deductions AFTER the limit
+        set(timerRef, {
+            name: task,
+            limit: limit,
+            startTime: Date.now(),
+            running: true
+        });
+    };
+
+    window.stopDiscipline = () => {
         set(timerRef, { running: false });
-        alert("Booted.");
     };
 
-    document.querySelectorAll('.btn-start').forEach(btn => {
-        btn.onclick = () => {
-            set(timerRef, { 
-                name: btn.dataset.task, 
-                limit: parseInt(btn.dataset.limit), 
-                isStrict: btn.dataset.strict, 
-                startTime: Date.now(), 
-                running: true 
-            });
-        };
-    });
-
-    document.querySelectorAll('.btn-input').forEach(btn => {
-        btn.onclick = () => {
-            let used = prompt(`Minutes for ${btn.dataset.task}?`);
-            if(used) applyMath(btn.dataset.task, parseInt(used), parseInt(btn.dataset.limit), btn.dataset.strict);
-        };
-    });
-
-    document.getElementById('stop-btn').onclick = () => {
-        onValue(timerRef, (s) => {
-            const t = s.val();
-            if(t.running) {
-                const elapsed = Math.round((Date.now() - t.startTime) / 60000);
-                applyMath(t.name, elapsed, t.limit, t.isStrict);
-                set(timerRef, { running: false });
-            }
-        }, {onlyOnce: true});
-    };
-
-    document.getElementById('grant-sleep').onclick = () => {
-        push(couponRef, { name: 'Sleep Pass', type: 'sleep', value: 8, desc: '+1h Sleep Extension', used: false });
-    };
-    
-    document.getElementById('grant-break').onclick = () => {
-        push(couponRef, { name: 'Extra Break', type: 'break', value: 30, desc: '+30m Break Refill', used: false });
-    };
+    window.quickPenalty = (amt) => deductFromPool(amt);
 }
