@@ -1,112 +1,106 @@
-:root {
-    --bg: #050505;
-    --glass: rgba(255, 255, 255, 0.03);
-    --border: rgba(255, 255, 255, 0.1);
-    --accent: #ff3b3b;
-    --gold: #ffcc00;
+:root { 
+    --red: #ff3e3e; 
+    --gold: #ffd700; 
+    --bg: #050505; 
+    --card-bg: #111;
 }
 
-body {
-    background-color: var(--bg);
-    color: #fff;
-    font-family: 'Inter', -apple-system, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
+body { 
+    background: var(--bg); 
+    color: #fff; 
+    font-family: 'Inter', -apple-system, sans-serif; 
+    text-align: center; 
+    padding: 20px; 
+    margin: 0; 
 }
 
-/* Glass Cards */
-.glass-card {
-    background: var(--glass);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-    border-radius: 32px;
-    padding: 40px;
-    width: 100%;
-    max-width: 380px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+.card { 
+    background: var(--card-bg); 
+    border: 1px solid #222; 
+    border-radius: 24px; 
+    padding: 25px; 
+    margin-bottom: 20px; 
 }
 
-.pool-val {
-    font-size: 6rem;
-    font-weight: 800;
-    color: var(--accent);
-    letter-spacing: -4px;
-    line-height: 1;
+.pool-text { 
+    font-size: 4.5rem; 
+    font-weight: 900; 
+    color: var(--red); 
+    margin: 10px 0; 
 }
 
-.label {
-    text-transform: uppercase;
-    font-size: 0.65rem;
-    letter-spacing: 3px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 10px;
+.label { 
+    font-size: 0.7rem; 
+    letter-spacing: 2px; 
+    color: #666; 
+    text-transform: uppercase; 
+    font-weight: bold; 
 }
 
-/* Minimal Timer */
-.timer-wrap {
-    margin: 40px 0;
-    text-align: center;
+.stat-grid { 
+    display: flex; 
+    justify-content: space-around; 
+    margin-top: 20px; 
+    border-top: 1px solid #222; 
+    padding-top: 20px; 
 }
 
-#timer-clock {
-    font-size: 4rem;
-    font-weight: 200;
-    font-variant-numeric: tabular-nums;
+.sub-val { 
+    font-size: 1.2rem; 
+    font-weight: bold; 
 }
 
-/* Admin Grid */
-.admin-grid {
-    display: none;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    width: 100%;
-    max-width: 380px;
-    margin-top: 20px;
+#active-timer-box { 
+    background: #fff; 
+    color: #000; 
+    padding: 20px; 
+    border-radius: 20px; 
+    margin: 20px 0; 
+    display: none; 
 }
 
-button {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    color: #fff;
-    padding: 16px;
-    border-radius: 16px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+#timer-clock { 
+    font-size: 3.5rem; 
+    font-weight: 900; 
 }
 
-button:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.3);
+.admin-section { 
+    display: none; 
+    border: 2px solid var(--gold); 
+    padding: 20px; 
+    border-radius: 24px; 
+    margin-top: 30px; 
 }
 
-.btn-stop {
-    grid-column: span 2;
-    background: var(--accent);
-    border: none;
-    margin-top: 10px;
+.btn-row { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    margin-bottom: 10px; 
 }
 
-#boot-screen {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
+button { 
+    padding: 14px; 
+    border-radius: 12px; 
+    border: none; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.2s; 
 }
 
-.sub-stats {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
+.btn-start { background: #222; color: #fff; border: 1px solid #333; }
+.btn-input { background: var(--gold); color: #000; }
+.btn-boot { background: #333; color: var(--gold); width: 100%; margin-bottom: 20px; }
+.btn-reward { background: var(--gold); color: #000; width: 100%; margin-top: 5px; }
+.btn-strict { background: var(--red); color: #fff; }
+.btn-strict-outline { border: 1px solid var(--red); background: transparent; color: var(--red); }
+
+.coupon-card { 
+    border: 2px dashed var(--gold); 
+    color: var(--gold); 
+    padding: 15px; 
+    border-radius: 15px; 
+    margin: 10px 0; 
 }
+
+.footer-note { font-size: 0.65rem; color: #444; margin-top: 40px; }
