@@ -13,97 +13,100 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const stateRef = ref(db, 'discipline/v5_state');
+const stateRef = ref(db, 'discipline/os_v6');
 
 const isAdmin = window.location.search.includes('admin=true');
-if(isAdmin) document.body.classList.add('admin-mode');
+if (isAdmin) document.body.classList.replace('user-view', 'admin-mode');
 
-// --- DATABASE SYNC ---
+// --- FORMATTER ---
+const fmt = (s) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sc = s % 60;
+    return `${h > 0 ? h + ':' : ''}${m < 10 && h > 0 ? '0' : ''}${m}:${sc < 10 ? '0' : ''}${sc}`;
+};
+
+// --- DATA SYNC ---
 onValue(stateRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) return;
 
-    // Update Main Pool
-    const poolSecs = data.mainPoolSecs || 12600;
-    document.getElementById('main-pool-display').innerText = formatTime(poolSecs);
+    // Update Global Pool
+    document.getElementById('main-pool-clock').innerText = fmt(data.poolSecs);
+    document.getElementById('buffer-val').innerText = data.buffer;
 
-    // Update Category Timers
-    ['bath', 'food', 'sleep'].forEach(cat => {
-        const timer = data.timers[cat];
-        const display = document.getElementById(`time-${cat}`);
-        const ring = document.getElementById(`ring-${cat}`);
-        const tile = document.getElementById(`tile-${cat}`);
+    // Update Categories
+    Object.keys(data.timers).forEach(key => {
+        const t = data.timers[key];
+        const clock = document.getElementById(`clock-${key}`);
+        const ring = document.getElementById(`ring-${key}`);
+        const tile = document.getElementById(`tile-${key}`);
 
-        let currentSecs = timer.elapsed;
-        if(timer.running) {
-            const now = Math.floor(Date.now() / 1000);
-            currentSecs += (now - timer.lastStarted);
+        let elapsed = t.elapsed;
+        if (t.running) {
+            elapsed += Math.floor((Date.now() / 1000) - t.lastStart);
         }
 
-        display.innerText = formatTime(currentSecs);
+        clock.innerText = fmt(elapsed);
         
-        // Progress Ring (283 is full circle)
-        const limitSecs = timer.limit * 60;
-        const offset = Math.max(0, 283 - (currentSecs / limitSecs) * 283);
+        // Ring offset (283 = circumference)
+        const limitSecs = t.limit * 60;
+        const offset = Math.max(0, 283 - (elapsed / limitSecs) * 283);
         ring.style.strokeDashoffset = offset;
 
         // Violation Logic
-        if (currentSecs > limitSecs) {
+        if (elapsed > limitSecs) {
             tile.classList.add('violation');
-            if(isAdmin && timer.running) processDrain(1); // Drain 1s per tick
+            if (isAdmin && t.running) triggerDrain(1);
         } else {
             tile.classList.remove('violation');
         }
     });
 });
 
-// --- ACTIONS ---
-window.toggleTimer = (cat, limitMins) => {
-    onValue(stateRef, (s) => {
-        const data = s.val();
-        const t = data.timers[cat];
+// --- ADMIN COMMANDS ---
+window.ctrlTimer = (key, limitMins) => {
+    onValue(stateRef, (snapshot) => {
+        const data = snapshot.val();
+        const t = data.timers[key];
         const now = Math.floor(Date.now() / 1000);
 
-        if(t.running) {
-            t.elapsed += (now - t.lastStarted);
+        if (t.running) {
+            t.elapsed += (now - t.lastStart);
             t.running = false;
         } else {
-            t.lastStarted = now;
+            t.lastStart = now;
             t.running = true;
         }
-        update(ref(db, 'discipline/v5_state/timers/' + cat), t);
-    }, {onlyOnce: true});
+        update(ref(db, `discipline/os_v6/timers/${key}`), t);
+    }, { onlyOnce: true });
 };
 
-window.forwardTime = (cat, limitMins, addMins) => {
-    const addSecs = parseInt(addMins) * 60;
+window.manualForward = (key, mins) => {
+    const addSecs = parseInt(mins) * 60;
     onValue(stateRef, (s) => {
-        const t = s.val().timers[cat];
+        const t = s.val().timers[key];
         t.elapsed += addSecs;
-        update(ref(db, 'discipline/v5_state/timers/' + cat), t);
-    }, {onlyOnce: true});
+        update(ref(db, `discipline/os_v6/timers/${key}`), t);
+    }, { onlyOnce: true });
 };
 
-function processDrain(sec) {
-    onValue(stateRef, (s) => {
-        const current = s.val().mainPoolSecs;
-        update(ref(db, 'discipline/v5_state'), { mainPoolSecs: current - sec });
-    }, {onlyOnce: true});
+function triggerDrain(s) {
+    onValue(stateRef, (snap) => {
+        const currentPool = snap.val().poolSecs;
+        update(ref(db, 'discipline/os_v6'), { poolSecs: currentPool - s });
+    }, { onlyOnce: true });
 }
 
-function formatTime(totalSeconds) {
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    return `${h > 0 ? h + ':' : ''}${m < 10 && h > 0 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-}
-
-window.resetSystem = () => {
+window.hardReset = () => {
+    if (!isAdmin) return;
     set(stateRef, {
-        mainPoolSecs: 12600,
+        poolSecs: 12600, // 3.5 Hours
+        buffer: 20,
         timers: {
             bath: { elapsed: 0, running: false, limit: 30 },
             food: { elapsed: 0, running: false, limit: 15 },
+            wash: { elapsed: 0, running: false, limit: 15 },
             sleep: { elapsed: 0, running: false, limit: 420 }
         }
     });
