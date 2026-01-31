@@ -1,4 +1,3 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, update, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -14,106 +13,116 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const stateRef = ref(db, "discipline/os_v6");
+const stateRef = ref(db, 'discipline/os_v6');
 
-const isAdmin = window.location.search.includes("admin=true");
+// ────────────────────────────────────────────────
+const isAdmin = window.location.search.includes('admin=true');
 if (isAdmin) {
-  document.body.classList.replace("user-view", "admin-mode");
-  document.getElementById("adminPanel").classList.remove("hidden");
+  document.body.classList.add('admin-mode');
+  document.getElementById('mode-indicator').textContent = 'Admin Mode';
 }
 
-const TIMERS = {
-  Bath: 30,
-  Food: 15,
-  Washroom: 15,
-  Sleep: 420,
-  Buffer: 20
+// Config (easy to edit)
+const limits = {
+  bath: 30,
+  food: 15,
+  washroom: 15,
+  sleep: 420,     // 7 hours
+  buffer: 20,
+  weekly_fun: 0   // set by admin
 };
 
-let totalBreak = 210;
-const timerGrid = document.getElementById("timerGrid");
+let totalBreak = 210;   // will be updated live
+let states = {};        // will hold {bath: {elapsed:0, active:false, ...}}
 
-function renderTimers() {
-  timerGrid.innerHTML = "";
-  Object.entries(TIMERS).forEach(([name, limit]) => {
-    const card = document.createElement("div");
-    card.className = "timer-card";
+// ─── Format MM:SS ────────────────────────────────────────
+function formatTime(minutes) {
+  const m = Math.floor(minutes);
+  const s = Math.floor((minutes - m) * 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
 
-    card.innerHTML = `
-      <h3>${name}</h3>
-      <svg class="circle" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" stroke="#333" stroke-width="8" fill="none"/>
-        <circle cx="50" cy="50" r="45" stroke="#4f7cff" stroke-width="8"
-          fill="none" stroke-dasharray="282" stroke-dashoffset="0"/>
-      </svg>
-      ${isAdmin ? `
-        <input type="number" placeholder="Add mins" />
-        <button>Add</button>
-      ` : ""}
-    `;
+// ─── Update one circle ───────────────────────────────────
+function updateCircle(type) {
+  const el = states[type];
+  if (!el) return;
 
-    if (isAdmin) {
-      const input = card.querySelector("input");
-      const btn = card.querySelector("button");
-      btn.onclick = () => {
-        const val = Number(input.value || 0);
-        totalBreak -= Math.max(0, val - limit);
-        updateState();
-      };
-    }
+  const limit = limits[type] || 0;
+  const pct = Math.min(el.elapsed / limit, 1) * 100;
+  const offset =  (2 * Math.PI * 44) * (1 - pct/100);
 
-    timerGrid.appendChild(card);
+  document.getElementById(`${type}-progress`).style.strokeDasharray = `${2 * Math.PI * 44}`;
+  document.getElementById(`${type}-progress`).style.strokeDashoffset = offset;
+
+  document.getElementById(`${type}-time`).textContent = formatTime(el.elapsed);
+}
+
+// ─── Update total ────────────────────────────────────────
+function updateTotal() {
+  let deducted = 0;
+  for (let type in states) {
+    const over = Math.max(0, states[type].elapsed - (limits[type] || 0));
+    deducted += over;
+  }
+
+  const remaining = Math.max(0, totalBreak - deducted);
+  const pct = remaining / 210;
+
+  document.getElementById('total-progress').style.strokeDasharray = `${2 * Math.PI * 54}`;
+  document.getElementById('total-progress').style.strokeDashoffset = (2 * Math.PI * 54) * (1 - pct);
+
+  document.getElementById('total-remaining').textContent = Math.round(remaining);
+}
+
+// ─── Real-time listener ──────────────────────────────────
+onValue(stateRef, (snap) => {
+  const data = snap.val() || {};
+  states = data.states || {};
+  totalBreak = data.totalBreak || 210;
+  limits.weekly_fun = data.weeklyAllowed || 0;
+
+  // Update all circles
+  for (let type in limits) {
+    updateCircle(type);
+  }
+  updateTotal();
+
+  // You can also update coupon list here if you expand it
+});
+
+// ─── Admin controls (start / stop / add) ─────────────────
+document.querySelectorAll('.timer-card').forEach(card => {
+  const type = card.dataset.type;
+  if (!type) return;
+
+  card.querySelector('.start-btn')?.addEventListener('click', () => {
+    update(ref(db, `${stateRef.path}/${type}`), { active: true, startTime: Date.now() });
   });
-}
 
-function updateState() {
-  document.getElementById("totalTime").innerText = totalBreak;
-  update(stateRef, { totalBreak });
-}
+  card.querySelector('.stop-btn')?.addEventListener('click', () => {
+    update(ref(db, `${stateRef.path}/${type}`), { active: false });
+  });
 
-onValue(stateRef, snap => {
-  if (!snap.exists()) {
-    set(stateRef, { totalBreak });
-  } else {
-    totalBreak = snap.val().totalBreak;
-    document.getElementById("totalTime").innerText = totalBreak;
+  card.querySelector('.add-btn')?.addEventListener('click', () => {
+    const input = card.querySelector('.add-min');
+    const val = Number(input.value);
+    if (!val) return;
+    const current = states[type]?.elapsed || 0;
+    update(ref(db, `${stateRef.path}/${type}`), { elapsed: current + val });
+    input.value = '';
+  });
+});
+
+// Weekly fun setter
+document.getElementById('set-weekly-fun')?.addEventListener('click', () => {
+  const val = Number(document.getElementById('weekly-fun-allowed').value);
+  if (val >= 0) {
+    update(stateRef, { weeklyAllowed: val });
   }
 });
 
-renderTimers();
-
-/* Coupons */
-const couponList = document.getElementById("couponList");
-
-onValue(ref(db, "discipline/coupons"), snap => {
-  couponList.innerHTML = "";
-  snap.forEach(c => {
-    const data = c.val();
-    const div = document.createElement("div");
-    div.className = "coupon";
-    div.innerHTML = `
-      <strong>${data.name}</strong> (+${data.minutes} min)
-      ${!data.used ? `<button>Redeem</button>` : "<span>Used</span>"}
-    `;
-    if (!data.used) {
-      div.querySelector("button").onclick = () => {
-        totalBreak += data.minutes;
-        updateState();
-        update(ref(db, `discipline/coupons/${c.key}`), { used: true });
-      };
-    }
-    couponList.appendChild(div);
-  });
+// Coupon creation stub (expand later)
+document.getElementById('create-coupon')?.addEventListener('click', () => {
+  alert("Coupon creation logic can be added here (push to /coupons)");
+  // Example: push(ref(db, 'coupons'), { code, minutes, expiry })
 });
-
-if (isAdmin) {
-  document.getElementById("createCoupon").onclick = () => {
-    const name = couponName.value;
-    const minutes = Number(couponMinutes.value);
-    push(ref(db, "discipline/coupons"), {
-      name,
-      minutes,
-      used: false
-    });
-  };
-}
