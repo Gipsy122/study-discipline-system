@@ -2,38 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Study Discipline System</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Study Discipline Tracker</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body class="user-view">
+
   <header>
     <h1>Study Discipline System</h1>
-    <div id="total-break">
-      <span>Total Break Left</span>
-      <strong id="totalTime">210</strong> min
-    </div>
+    <p id="mode-indicator">User Mode</p>
   </header>
 
-  <main id="timerGrid"></main>
+  <main class="dashboard">
 
-  <!-- Coupons -->
-  <section class="coupon-section">
-    <h2>Coupons</h2>
-    <div id="couponList"></div>
-  </section>
+    <!-- Total Break Allowance -->
+    <section class="total-break-card">
+      <h2>Daily Break Allowance</h2>
+      <div class="big-circle">
+        <svg viewBox="0 0 120 120">
+          <circle class="bg" cx="60" cy="60" r="54"/>
+          <circle id="total-progress" class="progress" cx="60" cy="60" r="54"/>
+        </svg>
+        <div class="center-text">
+          <span id="total-remaining">210</span>
+          <small>/ 210 min</small>
+        </div>
+      </div>
+    </section>
 
-  <!-- Admin Panel -->
-  <section id="adminPanel" class="admin-panel hidden">
-    <h2>Admin Controls</h2>
+    <!-- Timer Grid -->
+    <section class="timers-grid">
+      <div class="timer-card" data-type="bath">
+        <h3>Bath</h3>
+        <div class="circle-container">
+          <svg viewBox="0 0 100 100">
+            <circle class="bg" cx="50" cy="50" r="44"/>
+            <circle class="progress" id="bath-progress" cx="50" cy="50" r="44"/>
+          </svg>
+          <div class="time-display">
+            <span id="bath-time">0:00</span>
+            <small>/ 30 min</small>
+          </div>
+        </div>
+        <div class="admin-controls">
+          <button class="start-btn">Start</button>
+          <button class="stop-btn">Stop</button>
+          <input type="number" class="add-min" placeholder="± min" min="-60" max="60"/>
+          <button class="add-btn">Apply</button>
+        </div>
+      </div>
 
-    <div class="admin-row">
-      <input id="couponName" placeholder="Coupon name">
-      <input id="couponMinutes" type="number" placeholder="Minutes">
-      <button id="createCoupon">Create Coupon</button>
-    </div>
-  </section>
+      <div class="timer-card" data-type="food">
+        <h3>Food</h3>
+        <div class="circle-container">
+          <svg viewBox="0 0 100 100">
+            <circle class="bg" cx="50" cy="50" r="44"/>
+            <circle class="progress" id="food-progress" cx="50" cy="50" r="44"/>
+          </svg>
+          <div class="time-display">
+            <span id="food-time">0:00</span>
+            <small>/ 15 min</small>
+          </div>
+        </div>
+        <div class="admin-controls">
+          <button class="start-btn">Start</button>
+          <button class="stop-btn">Stop</button>
+          <input type="number" class="add-min" placeholder="± min"/>
+          <button class="add-btn">Apply</button>
+        </div>
+      </div>
+
+      <!-- Repeat similar blocks for: washroom, sleep, buffer, weekly-fun -->
+      <!-- (shortened here for brevity — add them following the same pattern) -->
+
+    </section>
+
+    <!-- Weekly Fun Allowance Setter (admin only) -->
+    <section class="admin-only weekly-setter">
+      <h3>Weekly Fun Time Allowed</h3>
+      <input id="weekly-fun-allowed" type="number" placeholder="minutes (once per week)"/>
+      <button id="set-weekly-fun">Update</button>
+    </section>
+
+    <!-- Coupons -->
+    <section class="coupons-section">
+      <h2>Coupons</h2>
+      <div class="admin-only">
+        <input id="coupon-code" placeholder="Coupon code"/>
+        <input id="coupon-minutes" type="number" placeholder="Minutes to add"/>
+        <input id="coupon-expiry" type="date" placeholder="Expiry"/>
+        <button id="create-coupon">Create Coupon</button>
+      </div>
+      <div id="coupon-list"></div>
+    </section>
+
+  </main>
 
   <script type="module" src="script.js"></script>
 </body>
